@@ -83,7 +83,7 @@ const Create = {
 
         plane.model.update = dt => {
             const c = cam.model.orientation()
-            plane.model.rotationMatrix = mat4.inverseRotate(c.y, c.x, c.z)
+            plane.model.rotationMatrix = mat4.rotate(c.y, c.x, c.z)
         }
 
         return plane

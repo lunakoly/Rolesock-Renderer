@@ -85,7 +85,6 @@ group1.container.addActor(obj4)
 scene.container.addActor(group1)
 group1.model.scale(1, 0.5, 1)
 
-
 obj.controller.update = dt => {
     obj.model.rotate(dt / 10, 0, 0)
     obj.model.rotate(0, dt / 100, 0)

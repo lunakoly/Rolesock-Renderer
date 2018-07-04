@@ -1,6 +1,6 @@
 class PerspectiveCamera {
     constructor(fovy, near, far) {
-        this.model = new ObserverModelComponent()
+        this.model = new ModelComponent()
         this.setProjection(fovy, near, far)
     }
 

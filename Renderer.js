@@ -139,9 +139,9 @@ const Renderer = {
         const options = {}
 
         if (scene.camera) {
-            options.viewMatrix = scene.camera.model.total()
+            options.viewMatrix = scene.camera.model.inversed()
             options.projectionMatrix = scene.camera.projection
-            options.inversedViewMatrix = scene.camera.model.inversed()
+            options.inversedViewMatrix = scene.camera.model.total()
             options.inversedProjectionMatrix = scene.camera.inverseProjection
         } else {
             options.viewMatrix = Renderer.emptyMatrix
@@ -185,7 +185,7 @@ const Renderer = {
 
     renderShadowMapForDirectionalLight(scene, light) {
         Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uProjectionMatrix')
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(light.model.total(), 'uViewMatrix')
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(light.model.inversed(), 'uViewMatrix')
         Renderer.renderToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program)
     },
 
@@ -233,8 +233,8 @@ const Renderer = {
     },
 
     renderImpactForDirectionalLight(light, obj, parentModelMatrix, prog, options) {
-        prog.setUniformMatrix4fv(light.model.inversed(), 'uLightInversedViewMatrix')
-        prog.setUniformMatrix4fv(light.model.total(), 'uLightViewMatrix')
+        prog.setUniformMatrix4fv(light.model.total(), 'uLightInversedViewMatrix')
+        prog.setUniformMatrix4fv(light.model.inversed(), 'uLightViewMatrix')
         prog.setVec4(light.color, 'uLight.color')
 
         prog.setRawTexture(light.shadowMap.texture, Renderer.gl.TEXTURE0, 0, 'uLight.shadow2D')

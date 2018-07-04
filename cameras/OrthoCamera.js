@@ -1,6 +1,6 @@
 class OrthoCamera {
     constructor(near, far) {
-        this.model = new ObserverModelComponent()
+        this.model = new ModelComponent()
         this.setProjection(near, far)
     }
 

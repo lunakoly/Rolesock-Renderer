@@ -2,6 +2,7 @@ class ModelComponent {
     constructor() {
         this.translationMatrix = new mat4()
         this.rotationMatrix = new mat4()
+        this.offsetMatrix = new mat4()
         this.scaleMatrix = new mat4()
 
         // it's too difficult to get Euler Angles from matrix
@@ -10,7 +11,7 @@ class ModelComponent {
     }
 
     update(dt) {
-        
+
     }
 
     position() {
@@ -76,10 +77,31 @@ class ModelComponent {
         this.rotationMetaData = { y: y, x: x, z: z }
     }
 
+    offset() {
+        return {
+            x: this.offsetMatrix[0][3],
+            y: this.offsetMatrix[1][3],
+            z: this.offsetMatrix[2][3]
+        }
+    }
+
+    mount(x, y, z) {
+        this.offsetMatrix[0][3] = x
+        this.offsetMatrix[1][3] = y
+        this.offsetMatrix[2][3] = z
+    }
+
+    shift(dx, dy, dz) {
+        this.offsetMatrix[0][3] += dx
+        this.offsetMatrix[1][3] += dy
+        this.offsetMatrix[2][3] += dz
+    }
+
     total() {
         return this.translationMatrix
                 .xM(this.rotationMatrix)
                 .xM(this.scaleMatrix)
+                .xM(this.offsetMatrix)
     }
 
     apply(parentModelMatrix) {
@@ -89,9 +111,11 @@ class ModelComponent {
     inversed() {
         const r = this.orientation()
         const t = this.position()
+        const o = this.offset()
         const s = this.size()
 
-        return mat4.scale(1/s.x, 1/s.y, 1/s.z)
+        return mat4.translate(-o.x, -o.y, -o.z)
+                .xM(mat4.scale(1/s.x, 1/s.y, 1/s.z))
                 .xM(mat4.inverseRotate(-r.y, -r.x, -r.z))
                 .xM(mat4.translate(-t.x, -t.y, -t.z))
     }

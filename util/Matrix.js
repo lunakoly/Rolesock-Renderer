@@ -170,7 +170,7 @@ class mat4 extends Array {
     }
 
     /**
-    * Returns rotation matrix with Y, X, Z order
+    * Returns rotation matrix with Z, X, Y order
     */
     static rotate(dy, dx, dz) {     // TODO
         const asp = Math.PI / 180
@@ -199,11 +199,11 @@ class mat4 extends Array {
             [0,             0,            0, 1],
         ])
 
-        return rotZ.xM(rotX).xM(rotY)
+        return rotY.xM(rotX).xM(rotZ)
     }
 
     /**
-    * Returns rotation matrix with Z, X, Y order
+    * Returns rotation matrix with Y, X, Z order
     */
     static inverseRotate(dy, dx, dz) {     // TODO
         const asp = Math.PI / 180
@@ -232,7 +232,7 @@ class mat4 extends Array {
             [0,             0,            0, 1],
         ])
 
-        return rotY.xM(rotX).xM(rotZ)
+        return rotZ.xM(rotX).xM(rotY)
     }
 
     /**
