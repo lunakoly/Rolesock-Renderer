@@ -21,7 +21,7 @@ class OrthoCamera {
             Surface.aspect,
             this.projectionMetaData.near,
             this.projectionMetaData.far)
-        this.inverseProjection = inverseOrtho(
+        this.inversedProjection = inverseOrtho(
             Surface.aspect,
             this.projectionMetaData.near,
             this.projectionMetaData.far)

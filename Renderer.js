@@ -29,7 +29,7 @@ const Renderer = {
         Renderer.emptyMatrix = new mat4()
         Renderer.emptyTexture = Texture.color2D().complicate()
         Renderer.longOrtho = mat4.ortho(Surface.aspect, 0.1, 100).xM(mat4.scale(0.09, 0.09, 1)).xM(mat4.translate(0, 0, 15))
-        Renderer.inverseLongOrtho = mat4.translate(0, 0, -15).xM(mat4.scale(1/0.09, 1/0.09, 1)).xM(mat4.inverseOrtho(Surface.aspect, 0.1, 100))
+        Renderer.inversedLongOrtho = mat4.translate(0, 0, -15).xM(mat4.scale(1/0.09, 1/0.09, 1)).xM(mat4.inverseOrtho(Surface.aspect, 0.1, 100))
 
         // used by visualization mechanism to display screen texture
         Renderer.screenMesh = {
@@ -142,12 +142,12 @@ const Renderer = {
             options.viewMatrix = scene.camera.model.inversed()
             options.projectionMatrix = scene.camera.projection
             options.inversedViewMatrix = scene.camera.model.total()
-            options.inversedProjectionMatrix = scene.camera.inverseProjection
+            options.inversedProjectionMatrix = scene.camera.inversedProjection
         } else {
             options.viewMatrix = Renderer.emptyMatrix
             options.projectionMatrix = Renderer.longOrtho
             options.inversedViewMatrix = Renderer.emptyMatrix
-            options.inversedProjectionMatrix = Renderer.inverseLongOrtho
+            options.inversedProjectionMatrix = Renderer.inversedLongOrtho
         }
 
 

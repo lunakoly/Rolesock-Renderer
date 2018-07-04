@@ -23,7 +23,7 @@ class PerspectiveCamera {
             Surface.aspect,
             this.projectionMetaData.near,
             this.projectionMetaData.far)
-        this.inverseProjection = mat4.inversePerspective(
+        this.inversedProjection = mat4.inversePerspective(
             this.projectionMetaData.fovy,
             Surface.aspect,
             this.projectionMetaData.near,
