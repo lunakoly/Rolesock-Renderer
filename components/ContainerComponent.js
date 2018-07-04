@@ -1,5 +1,7 @@
 class ContainerComponent {
-    constructor() {
+    constructor(holder) {
+        this.holder = holder
+
         this.opaqueChildren = []
         this.transparentChildren = []
 
@@ -9,6 +11,8 @@ class ContainerComponent {
     }
 
     addActor(actor) {
+        actor.holder = this.holder
+
         if (actor.container)
             this.containerChildren.push(actor)
         else if (actor.material.isTransparent)
@@ -20,6 +24,8 @@ class ContainerComponent {
     }
 
     removeActor(actor) {
+        actor.holder = null
+
         if (actor.container)
             this.containerChildren.splice(this.containerChildren.indexOf(actor), 1)
         else if (actor.material.isTransparent)

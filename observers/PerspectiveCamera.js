@@ -1,11 +1,7 @@
-class PerspectiveCamera {
+class PerspectiveCamera extends Observer {
     constructor(fovy, near, far) {
-        this.model = new ModelComponent()
+        super()
         this.setProjection(fovy, near, far)
-    }
-
-    update(dt) {
-        this.model.update(dt)
     }
 
     setProjection(fovy, near, far) {

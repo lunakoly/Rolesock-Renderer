@@ -1,7 +1,7 @@
 class Scene {
     constructor(camera) {
         this.camera = camera
-        this.container = new ContainerComponent()
+        this.container = new ContainerComponent(this)
         this.environment = new EnvironmentComponent()
 
         this.container.addLightSource(this.environment.sun)

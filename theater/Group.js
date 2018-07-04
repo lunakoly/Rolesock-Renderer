@@ -1,6 +1,6 @@
 class Group {
     constructor() {
-        this.container = new ContainerComponent()
+        this.container = new ContainerComponent(this)
         this.model = new ModelComponent()
     }
 

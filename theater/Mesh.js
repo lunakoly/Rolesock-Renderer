@@ -2,7 +2,7 @@ class Mesh {
     constructor(vertexBuffer, orderBuffer, indicesCount, uvBuffer, normalsBuffer, material, texture) {
         this.controller = new ControllerComponent()
         this.model = new ModelComponent()
-        this.meshType = 'mesh'
+        this.holder = null
 
         this.material = material || Materials.DUMMY_MATERIAL
         this.texture = texture   || new TextureComponent()
@@ -35,6 +35,7 @@ class Mesh {
         if (mode == 'light') {
             prog.setAttribute(this.normalsBuffer, 3, 'aNormal')
         } else {
+            // 'shape' or 'self'
             prog.setAttribute(this.uvBuffer, 2, 'aTexture')
             prog.useTexture(this.texture)
         }

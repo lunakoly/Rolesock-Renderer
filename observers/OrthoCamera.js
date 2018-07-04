@@ -1,11 +1,7 @@
-class OrthoCamera {
+class OrthoCamera extends Observer {
     constructor(near, far) {
-        this.model = new ModelComponent()
+        super()
         this.setProjection(near, far)
-    }
-
-    update(dt) {
-        this.model.update(dt)
     }
 
     setProjection(near, far) {

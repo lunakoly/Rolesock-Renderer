@@ -82,8 +82,7 @@ const Create = {
         plane.texture.diffuse = diffuseTexture || null
 
         plane.model.update = dt => {
-            const c = cam.model.orientation()
-            plane.model.rotationMatrix = mat4.rotate(c.y, c.x, c.z)
+            plane.model.rotationMatrix = cam.getRotationMatrix()
         }
 
         return plane
