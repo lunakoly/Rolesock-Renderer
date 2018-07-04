@@ -32,7 +32,7 @@ Shaders.MESH_DIFFUSE_LIGHT_SHADERS = {
         void main(void) {
             float depth = texture2D(uLight.shadow2D, vLightSpacePosition.xy).x;
 
-            if (vLightSpacePosition.z <= depth + 0.005) {
+            if (vLightSpacePosition.z <= depth + 0.0004) {
                 // accept light
                 vec3 portion = uLight.color.rgb * uLight.color.a * dot(vLightSpaceRawNormal, vec3(0, 0, -1));
                 gl_FragColor = vec4(portion, 1.0);
@@ -120,7 +120,7 @@ Shaders.MESH_SPECULAR_LIGHT_SHADERS = {
         void main(void) {
             float depth = texture2D(uLight.shadow2D, vLightSpacePosition.xy).x;
 
-            if (vLightSpacePosition.z <= depth + 0.005) {
+            if (vLightSpacePosition.z <= depth + 0.0004) {
                 // accept light
                 vec3 eyeSpaceEyeRay = normalize(vec3(0.0, 0.0, -1.0) - vPosition);
                 float cos = pow(dot(vEyeSpaceReflectedRay, eyeSpaceEyeRay), uMaterial.shininess);

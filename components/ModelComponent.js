@@ -9,6 +9,10 @@ class ModelComponent {
         this.rotationMetaData = { y: 0, x: 0, z: 0 }
     }
 
+    update(dt) {
+        
+    }
+
     position() {
         return {
             x: this.translationMatrix[0][3],

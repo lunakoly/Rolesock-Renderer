@@ -4,6 +4,10 @@ class TextureComponent {
         this.specular = specular || null
     }
 
+    update(dt) {
+        
+    }
+
     isNotEmpty() {
         return this.diffuse != null || this.specular != null
     }

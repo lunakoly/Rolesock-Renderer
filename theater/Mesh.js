@@ -1,5 +1,6 @@
 class Mesh {
     constructor(vertexBuffer, orderBuffer, indicesCount, uvBuffer, normalsBuffer, material, texture) {
+        this.controller = new ControllerComponent()
         this.model = new ModelComponent()
         this.meshType = 'mesh'
 
@@ -18,40 +19,25 @@ class Mesh {
     }
 
     update(dt) {
-
+        this.model.update(dt)
+        this.texture.update(dt)
+        this.material.update(dt)
+        this.controller.update(dt)
     }
 
-    drawShape(parentModelMatrix) {
-        const modelMatrix = this.model.apply(parentModelMatrix)
-
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(modelMatrix, 'uModelMatrix')
-        Shaders.MESH_DEPTH_SHADERS.program.setAttribute(this.vertexBuffer, 3, 'aPosition')
-
-        Shaders.MESH_DEPTH_SHADERS.program.drawElements(this.orderBuffer, this.indicesCount)
-    }
-
-    drawSelf(parentModelMatrix) {
-        const modelMatrix = this.model.apply(parentModelMatrix)
-        const prog = this.selfShaderProgram.program
-
-        prog.setUniformMatrix4fv(modelMatrix, 'uModelMatrix')
-        prog.setAttribute(this.vertexBuffer, 3, 'aPosition')
-        prog.setAttribute(this.uvBuffer, 2, 'aTexture')
-
-        prog.useMaterial(this.material)
-        prog.useTexture(this.texture)
-
-        prog.drawElements(this.orderBuffer, this.indicesCount)
-    }
-
-    drawLight(prog, parentModelMatrix) {
+    draw(prog, parentModelMatrix, mode) {
         const modelMatrix = this.model.apply(parentModelMatrix)
 
         prog.setUniformMatrix4fv(modelMatrix, 'uModelMatrix')
         prog.setAttribute(this.vertexBuffer, 3, 'aPosition')
-        prog.setAttribute(this.normalsBuffer, 3, 'aNormal')
-
         prog.useMaterial(this.material)
+
+        if (mode == 'light') {
+            prog.setAttribute(this.normalsBuffer, 3, 'aNormal')
+        } else {
+            prog.setAttribute(this.uvBuffer, 2, 'aTexture')
+            prog.useTexture(this.texture)
+        }
 
         prog.drawElements(this.orderBuffer, this.indicesCount)
     }

@@ -10,6 +10,10 @@ class ObserverModelComponent {
         this.rotationMetaData = { y: 0, x: 0, z: 0 }
     }
 
+    update(dt) {
+        
+    }
+
     position() {
         return {
             x: -this.translationMatrix[0][3],
@@ -95,9 +99,9 @@ class ObserverModelComponent {
 
     total() {
         return this.offsetMatrix
+                .xM(this.scaleMatrix)
                 .xM(this.rotationMatrix)
                 .xM(this.translationMatrix)
-                .xM(this.scaleMatrix)
     }
 
     apply(parentModelMatrix) {
@@ -110,9 +114,9 @@ class ObserverModelComponent {
         const o = this.offset()
         const s = this.size()
 
-        return mat4.scale(1/s.x, 1/s.y, 1/s.z)
-                .xM(mat4.translate(t.x, t.y, t.z))
+        return mat4.translate(t.x, t.y, t.z)
                 .xM(mat4.inverseRotate(r.y, r.x, r.z))
+                .xM(mat4.scale(1/s.x, 1/s.y, 1/s.z))
                 .xM(mat4.translate(o.x, o.y, o.z))
     }
 }

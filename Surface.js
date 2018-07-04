@@ -20,18 +20,9 @@ const Surface = {
     resize(width, height) {
         this.space.width = width
         this.space.height = height
-        this.aspect = this.space.width / this.space.height
+        this.aspect = this.space.clientWidth / this.space.clientWidth
         Renderer.updateViewport()
         this.layers.forEach(it => it.updateViewport())
-    },
-
-    setSkyColor(color) {
-        Surface.space.style.background = 'rgba(' +
-                (color[0] * 255) + ',' +
-                (color[1] * 255) + ',' +
-                (color[2] * 255) + ',' +
-                (color[3] * 255) + ')'
-        Renderer.setSkyColor(color)
     },
 
     initEvents() {

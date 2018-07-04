@@ -21,11 +21,27 @@ class Scene {
     }
 
     update(dt) {
+        if (this.camera) this.camera.update(dt)
         this.container.update(dt)
         this.environment.update(dt)
     }
 
     updateViewport() {
         if (this.camera) this.camera.updateViewport()
+    }
+
+    forEachOpaque(callback) {
+        this.container.opaqueChildren.forEach(it => callback(it, Renderer.emptyMatrix))
+        this.container.containerChildren.forEach(it => it.forEachOpaque(callback, Renderer.emptyMatrix))
+    }
+
+    forEachTransparent(callback) {
+        this.container.transparentChildren.forEach(it => callback(it, Renderer.emptyMatrix))
+        this.container.containerChildren.forEach(it => it.forEachTransparent(callback, Renderer.emptyMatrix))
+    }
+
+    forEachDirectionalLight(callback) {
+        this.container.directionalLightSources.forEach(it => callback(it, Renderer.emptyMatrix))
+        this.container.containerChildren.forEach(it => it.forEachDirectionalLight(callback, Renderer.emptyMatrix))
     }
 }

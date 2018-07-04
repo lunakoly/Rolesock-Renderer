@@ -9,6 +9,6 @@ class EnvironmentComponent {
     }
 
     update(dt) {
-
+        this.sun.update(dt)
     }
 }

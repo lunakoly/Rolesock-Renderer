@@ -1,12 +1,15 @@
-class ObserverCamera {
-    constructor(fovy, near, far) {
+class OrthoCamera {
+    constructor(near, far) {
         this.model = new ObserverModelComponent()
-        this.setProjection(fovy, near, far)
+        this.setProjection(near, far)
     }
 
-    setProjection(fovy, near, far) {
+    update(dt) {
+        this.model.update(dt)
+    }
+
+    setProjection(near, far) {
         this.projectionMetaData = {
-            fovy: fovy,
             near: near,
             far: far
         }
@@ -14,13 +17,11 @@ class ObserverCamera {
     }
 
     updateViewport() {
-        this.projection = mat4.perspective(
-            this.projectionMetaData.fovy,
+        this.projection = mat4.ortho(
             Surface.aspect,
             this.projectionMetaData.near,
             this.projectionMetaData.far)
-        this.inverseProjection = mat4.inversePerspective(
-            this.projectionMetaData.fovy,
+        this.inverseProjection = inverseOrtho(
             Surface.aspect,
             this.projectionMetaData.near,
             this.projectionMetaData.far)

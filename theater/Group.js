@@ -5,18 +5,25 @@ class Group {
     }
 
     update(dt) {
+        this.model.update(dt)
         this.container.update(dt)
     }
 
-    drawOpaque(options, parentModelMatrix) {
-        this.container.drawOpaque(options, this.model.apply(parentModelMatrix))
+    forEachOpaque(callback, parentModelMatrix) {
+        const modelMatrix = parentModelMatrix.xM(this.model.total())
+        this.container.opaqueChildren.forEach(it => callback(it, modelMatrix))
+        this.container.containerChildren.forEach(it => it.forEachOpaque(callback, modelMatrix))
     }
 
-    drawTransparent(options, parentModelMatrix) {
-        this.container.drawTransparent(options, this.model.apply(parentModelMatrix))
+    forEachTransparent(callback, parentModelMatrix) {
+        const modelMatrix = parentModelMatrix.xM(this.model.total())
+        this.container.transparentChildren.forEach(it => callback(it, modelMatrix))
+        this.container.containerChildren.forEach(it => it.forEachTransparent(callback, modelMatrix))
     }
 
-    drawSprite(options, parentModelMatrix) {
-        this.container.drawSprite(options, this.model.apply(parentModelMatrix))
+    forEachDirectionalLight(callback, parentModelMatrix) {
+        const modelMatrix = parentModelMatrix.xM(this.model.total())
+        this.container.directionalLightSources.forEach(it => callback(it, modelMatrix))
+        this.container.containerChildren.forEach(it => it.forEachDirectionalLight(callback, modelMatrix))
     }
 }

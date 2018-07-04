@@ -3,29 +3,31 @@ const Renderer = {
         try {
             Renderer.gl = Surface.space.getContext("webgl")
                        || Surface.space.getContext("experimental-webgl")
+
+           Renderer.depthTextureExt = Renderer.gl.getExtension('WEBGL_depth_texture')
+           Renderer.drawBuffersExt = Renderer.gl.getExtension('WEBGL_draw_buffers')
+           Renderer.fragDepthExt = Renderer.gl.getExtension('EXT_frag_depth')
         } catch (e) {}
 
-        if (!Renderer.gl) {
-            console.error("Renderer: Could not get WebGL context")
+        if (!Renderer.gl ||
+            !Renderer.depthTextureExt ||
+            !Renderer.drawBuffersExt ||
+            !Renderer.fragDepthExt) {
+            console.error("Renderer: Could not get WebGL context with all of the required extensions")
             return
         }
 
-        Renderer.depthTextureExt = Renderer.gl.getExtension('WEBGL_depth_texture')
-        Renderer.drawBuffersExt = Renderer.gl.getExtension('WEBGL_draw_buffers')
-        Renderer.fragDepthExt = Renderer.gl.getExtension('EXT_frag_depth')
-        Renderer.initSubFramebuffer()
-
-        Renderer.restoreDefaults()
         Renderer.initializeShaderPrograms()
+        Renderer.initSubFramebuffer()
+        Renderer.restoreDefaults()
     },
 
     restoreDefaults() {
-        Renderer.gl.enable(Renderer.gl.CULL_FACE)
         Renderer.gl.cullFace(Renderer.gl.FRONT)
 
         // used if no data defined for rendering
-        Renderer.emptyTexture = Texture.color2D().complicate()
         Renderer.emptyMatrix = new mat4()
+        Renderer.emptyTexture = Texture.color2D().complicate()
         Renderer.longOrtho = mat4.ortho(Surface.aspect, 0.1, 100).xM(mat4.scale(0.09, 0.09, 1)).xM(mat4.translate(0, 0, 15))
         Renderer.inverseLongOrtho = mat4.translate(0, 0, -15).xM(mat4.scale(1/0.09, 1/0.09, 1)).xM(mat4.inverseOrtho(Surface.aspect, 0.1, 100))
 
@@ -51,20 +53,16 @@ const Renderer = {
     },
 
     initializeShaderPrograms() {
-        Shaders.MESH_DEPTH_SHADERS.program = new ShaderProgram(Shaders.MESH_DEPTH_SHADERS)
-        Shaders.SPRITE_DEPTH_SHADERS.program = new ShaderProgram(Shaders.SPRITE_DEPTH_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.TEXTURE_VISUALIZATION_SHADERS)
 
-        Shaders.MESH_SELF_SHADERS.program = new ShaderProgram(Shaders.MESH_SELF_SHADERS)
-        Shaders.MESH_DIFFUSE_LIGHT_SHADERS.program = new ShaderProgram(Shaders.MESH_DIFFUSE_LIGHT_SHADERS)
-        Shaders.MESH_SPECULAR_LIGHT_SHADERS.program = new ShaderProgram(Shaders.MESH_SPECULAR_LIGHT_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.MESH_SELF_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.MESH_DEPTH_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.MESH_DIFFUSE_LIGHT_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.MESH_SPECULAR_LIGHT_SHADERS)
+    },
 
-        Shaders.SPRITE_SELF_SHADERS.program = new ShaderProgram(Shaders.SPRITE_SELF_SHADERS)
-        Shaders.SPRITE_DIFFUSE_LIGHT_SHADERS.program = new ShaderProgram(Shaders.SPRITE_DIFFUSE_LIGHT_SHADERS)
-        Shaders.SPRITE_SPECULAR_LIGHT_SHADERS.program = new ShaderProgram(Shaders.SPRITE_SPECULAR_LIGHT_SHADERS)
-
-        Shaders.TEXTURE_VISUALIZATION_SHADERS.program = new ShaderProgram(Shaders.TEXTURE_VISUALIZATION_SHADERS)
-
-        Shaders.MESH_SELF_SHADERS.program.use()
+    initializeShaderProgram(shaders) {
+        shaders.program = new ShaderProgram(shaders)
     },
 
     update(dt) {
@@ -98,11 +96,12 @@ const Renderer = {
         }
     },
 
-    prepareFramebufferForMeshDepthTesting() {
+    prepareFramebufferForDepthTesting() {
         Renderer.drawBuffersExt.drawBuffersWEBGL([Renderer.gl.NONE])
         Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, null, 0)
 
         Renderer.gl.disable(Renderer.gl.BLEND)
+        Renderer.gl.disable(Renderer.gl.CULL_FACE)
 
         Renderer.gl.enable(Renderer.gl.DEPTH_TEST)
         Renderer.gl.depthFunc(Renderer.gl.LEQUAL)
@@ -115,9 +114,11 @@ const Renderer = {
         Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.colorTexture.texture, 0)
 
         Renderer.gl.enable(Renderer.gl.BLEND)
+        Renderer.gl.enable(Renderer.gl.CULL_FACE)
 
         Renderer.gl.enable(Renderer.gl.DEPTH_TEST)
         Renderer.gl.depthFunc(Renderer.gl.LEQUAL)
+        Renderer.gl.depthMask(false)
 
         Renderer.gl.viewport(0, 0, Surface.space.clientWidth, Surface.space.clientHeight)
         Renderer.gl.clearColor(0, 0, 0, 0)
@@ -151,22 +152,14 @@ const Renderer = {
 
 
         // render light shadow maps
-        Renderer.prepareFramebufferForMeshDepthTesting()
+        Renderer.prepareFramebufferForDepthTesting()
 
-        // Render depth textures for meshes
+        // render common scene depth
         Shaders.MESH_DEPTH_SHADERS.program.ensureUsage(options)
-        scene.container.directionalLightSources.forEach(light => Renderer.renderMeshesShadowMapForDirectionalLight(scene, light))
+        Renderer.renderToDepthTexture(Renderer.gl.TEXTURE_2D, Renderer.depthTexture, scene, Shaders.MESH_DEPTH_SHADERS.program)
 
-        // Render depth textures for sprites
-        Renderer.gl.disable(Renderer.gl.CULL_FACE)
-        Shaders.SPRITE_DEPTH_SHADERS.program.ensureUsage(options)
-        scene.container.directionalLightSources.forEach(light => Renderer.renderSpritesShadowMapForDirectionalLight(scene, light))
-        Renderer.gl.enable(Renderer.gl.CULL_FACE)
-
-
-        // Renderer.visualizeTexture(scene.environment.sun.shadowMap, true, true)
-        // throw new Error('STOP')
-        // return
+        // Render light depth textures for meshes
+        scene.container.directionalLightSources.forEach(light => Renderer.renderShadowMapForDirectionalLight(scene, light))
 
 
         // Render light textures and final color one
@@ -174,12 +167,11 @@ const Renderer = {
 
         // Render common temporary light textures for opaques
         // + render objects to final color texture
-        scene.container.forEachOpaque(it => Renderer.renderObject(scene, it, options))
-        Renderer.gl.depthMask(false)
+        scene.forEachOpaque((it, parentModelMatrix) =>
+                Renderer.renderObject(scene, it, parentModelMatrix, options))
         // for transparent
-        scene.container.forEachTransparent(it => Renderer.renderObject(scene, it, options))
-        // for sprites
-        scene.container.forEachSprite(it => Renderer.renderObject(scene, it, options))
+        scene.forEachTransparent((it, parentModelMatrix) =>
+                Renderer.renderObject(scene, it, parentModelMatrix, options))
 
 
         // print out to screen
@@ -191,39 +183,23 @@ const Renderer = {
         // throw new Error('STOP')
     },
 
-    renderMeshesShadowMapForDirectionalLight(scene, light) {
+    renderShadowMapForDirectionalLight(scene, light) {
         Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uProjectionMatrix')
         Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(light.model.total(), 'uViewMatrix')
-        Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene)
+        Renderer.renderToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program)
     },
 
-    renderMeshesToDepthTexture(slot, texture, scene, condition) {
+    renderToDepthTexture(slot, texture, scene, prog) {
         Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.DEPTH_ATTACHMENT, slot, texture.texture, 0)
         Renderer.gl.viewport(0, 0, texture.width, texture.height)
         Renderer.gl.clear(Renderer.gl.DEPTH_BUFFER_BIT)
 
-        scene.container.forEachOpaque(it => {
-            it.drawShape(Renderer.emptyMatrix)
+        scene.forEachOpaque((it, parentModelMatrix) => {
+            it.draw(prog, parentModelMatrix, 'shape')
         })
     },
 
-    renderSpritesShadowMapForDirectionalLight(scene, light) {
-        Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uLightProjectionMatrix')
-        Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(light.model.total(), 'uLightViewMatrix')
-        Renderer.renderSpritesToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene)
-    },
-
-    renderSpritesToDepthTexture(slot, texture, scene, condition) {
-        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.DEPTH_ATTACHMENT, slot, texture.texture, 0)
-        Renderer.gl.viewport(0, 0, texture.width, texture.height)
-        // no need to clear because this is run after meshes rendering
-
-        scene.container.forEachSprite(it => {
-            it.drawShape(Renderer.emptyMatrix)
-        })
-    },
-
-    renderObject(scene, obj, options) {
+    renderObject(scene, obj, parentModelMatrix, options) {
         Renderer.gl.blendFunc(Renderer.gl.ONE, Renderer.gl.ONE)
 
         // diffuse
@@ -232,7 +208,7 @@ const Renderer = {
         diffLightProg.ensureUsage(options)
 
         // render light impact
-        scene.container.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, diffLightProg, options))
+        scene.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, parentModelMatrix, diffLightProg, options))
 
 
         // specular
@@ -241,7 +217,7 @@ const Renderer = {
         specLightProg.ensureUsage(options)
 
         // render light impact
-        scene.container.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, specLightProg, options))
+        scene.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, parentModelMatrix, specLightProg, options))
 
 
         // summary
@@ -253,21 +229,27 @@ const Renderer = {
         selfProg.setRawTexture(Renderer.diffuseLightTexture.texture, Renderer.gl.TEXTURE2, 2, 'uLightDiffuseTexture')
         selfProg.setRawTexture(Renderer.specularLightTexture.texture, Renderer.gl.TEXTURE3, 3, 'uLightSpecularTexture')
 
-        obj.drawSelf(Renderer.emptyMatrix)
+        obj.draw(selfProg, parentModelMatrix, 'self')
     },
 
-    renderImpactForDirectionalLight(light, obj, prog, options) {
+    renderImpactForDirectionalLight(light, obj, parentModelMatrix, prog, options) {
         prog.setUniformMatrix4fv(light.model.inversed(), 'uLightInversedViewMatrix')
         prog.setUniformMatrix4fv(light.model.total(), 'uLightViewMatrix')
         prog.setVec4(light.color, 'uLight.color')
 
         prog.setRawTexture(light.shadowMap.texture, Renderer.gl.TEXTURE0, 0, 'uLight.shadow2D')
         prog.setUniformMatrix4fv(Renderer.longOrtho, 'uLightProjectionMatrix')
-        obj.drawLight(prog, Renderer.emptyMatrix)
+        obj.draw(prog, parentModelMatrix, 'light')
     },
 
     updateViewport() {
         Renderer.gl.viewport(0, 0, Surface.space.clientWidth, Surface.space.clientHeight)
+        Renderer.subFramebuffer.height = Surface.space.clientHeight
+        Renderer.subFramebuffer.width = Surface.space.clientWidth
+        Renderer.depthTexture.make().scaleToScreen().beDepth2D()
+        Renderer.colorTexture.make().scaleToScreen().beColor2D()
+        Renderer.diffuseLightTexture.make().scaleToScreen().beColor2D()
+        Renderer.specularLightTexture.make().scaleToScreen().beColor2D().unbind()
     },
 
     createArrayBuffer(data) {

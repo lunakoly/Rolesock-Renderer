@@ -45,27 +45,6 @@ Shaders.TEXTURE_VISUALIZATION_SHADERS = {
 
 Shaders.MESH_DEPTH_SHADERS = {
     fragment: `
-        void main(void) {}
-    `,
-
-    vertex: `
-        precision lowp float;
-
-        attribute vec3 aPosition;
-
-        uniform mat4 uViewMatrix;
-        uniform mat4 uModelMatrix;
-        uniform mat4 uProjectionMatrix;
-
-        void main(void) {
-            gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
-        }
-    `
-}
-
-
-Shaders.SPRITE_DEPTH_SHADERS = {
-    fragment: `
         #extension GL_EXT_frag_depth : enable
         precision lowp float;
 
@@ -93,6 +72,18 @@ Shaders.SPRITE_DEPTH_SHADERS = {
 
         varying vec2 vTexture;
 
+
+        vec4 oToV(float o) {
+            vec4 v = vec4(0, 0, 0, 0);
+            float s = o * 4.0;
+            v.x = min(s, 1.0);
+            v.y = min(s - v.x, 1.0);
+            v.z = min(s - v.y - v.x, 1.0);
+            v.w = min(s - v.z - v.y - v.x, 1.0);
+            return v;
+        }
+
+
         void main(void) {
             float alpha = uMaterial.diffuse.a;
 
@@ -112,8 +103,10 @@ Shaders.SPRITE_DEPTH_SHADERS = {
 
             if (alpha != 1.0) {
                 gl_FragDepthEXT = 1.0;
+                // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
             } else {
-                gl_FragDepthEXT = gl_FragCoord.z - 0.0045;
+                gl_FragDepthEXT = gl_FragCoord.z + 0.0001;
+                // gl_FragColor = oToV(gl_FragDepthEXT);
             }
         }
     `,
@@ -121,35 +114,17 @@ Shaders.SPRITE_DEPTH_SHADERS = {
     vertex: `
         precision lowp float;
 
+        attribute vec3 aPosition;
         attribute vec2 aTexture;
 
-        uniform float uAspect;
-
-        uniform mat4 uScaleMatrix;
-        uniform mat4 uRotationMatrix;
-        uniform mat4 uTranslationMatrix;
-
         uniform mat4 uViewMatrix;
+        uniform mat4 uModelMatrix;
         uniform mat4 uProjectionMatrix;
-        uniform mat4 uInversedViewMatrix;
-        uniform mat4 uInversedProjectionMatrix;
-
-        uniform mat4 uLightViewMatrix;
-        uniform mat4 uLightProjectionMatrix;
-        uniform mat4 uLightInversedViewMatrix;
 
         varying vec2 vTexture;
 
         void main(void) {
-            gl_Position = uProjectionMatrix * uViewMatrix * uTranslationMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-            vec2 position = aTexture * 2.0 - 1.0;
-            position.x /= uAspect;
-            position.y += 1.0;
-            gl_Position.xy += (uRotationMatrix * uScaleMatrix * vec4(position.xy, 0.0, 1.0)).xy;
-
-            vec4 worldSpacePosition = uInversedViewMatrix * uInversedProjectionMatrix * gl_Position;
-            gl_Position = uLightProjectionMatrix * uLightViewMatrix * worldSpacePosition;
-
+            gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
             vTexture = aTexture;
         }
     `

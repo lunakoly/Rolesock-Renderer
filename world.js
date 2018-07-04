@@ -1,9 +1,8 @@
 Engine.initialize()
 
 
-const cam = new ObserverCamera(45, 0.1, 100)
+const cam = new PerspectiveCamera(45, 0.1, 100)
 // cam.model.put(0, 1, -3)
-cam.model.put(0, 0, 0)
 cam.model.shift(0, 0.2, -3.7)
 
 
@@ -33,7 +32,7 @@ Materials.SHINY.diffuse = [1, 1, 1, 0]
 Materials.SHINY.specular = [0.7, 0.7, 1, 0.3]
 Materials.SHINY.shininess = 1024
 
-const char = new Sprite(Materials.SHINY)
+const char = Create.Sprite(cam, Materials.SHINY)
 char.texture.diffuse = Texture.fromImage('img/char.png')
 scene.container.addActor(char)
 
@@ -71,16 +70,23 @@ obj2.model.move(1, 1, 2)
 
 // SUB
 const obj3 = Create.fromOBJSource('fuck', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
-scene.container.addActor(obj3)
+// scene.container.addActor(obj3)
 obj3.model.move(-2, 1, -3)
 
 // SUB
 const obj4 = Create.fromOBJSource('fuck', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
-scene.container.addActor(obj4)
+// scene.container.addActor(obj4)
 obj4.model.move(2, 1, -3)
 
 
-obj.update = dt => {
+const group1 = new Group()
+group1.container.addActor(obj3)
+group1.container.addActor(obj4)
+scene.container.addActor(group1)
+group1.model.scale(1, 0.5, 1)
+
+
+obj.controller.update = dt => {
     obj.model.rotate(dt / 10, 0, 0)
     obj.model.rotate(0, dt / 100, 0)
 
@@ -91,6 +97,7 @@ obj.update = dt => {
 // SUB
 const p1 = Create.new('Plane')
 p1.material = new MaterialComponent()
+p1.material.isTransparent = true
 p1.material.diffuse = [0.9, 1, 0.9, 1]
 p1.material.opacity = 0.5
 p1.material.specular = [1.0, 0, 0, 1]

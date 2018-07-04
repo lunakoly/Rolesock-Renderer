@@ -22,6 +22,27 @@ const Create = {
             0, 0, -1,
             0, 0, -1
         ]).generateBuffers())
+
+        // SPRITE PROTOTYPE
+        Create.setPrototype(new MeshPrototype('Sprite', [
+            1, 1, 0,
+            0, 1, 0,
+            1, 0, 0,
+            0, 0, 0
+        ], [
+            0, 2, 1,
+            1, 2, 3
+        ], [
+            1, 1,
+            0, 1,
+            1, 0,
+            0, 0
+        ], [
+            0, 0, -1,
+            0, 0, -1,
+            0, 0, -1,
+            0, 0, -1
+        ]).generateBuffers())
     },
 
     getPrototype(name) {
@@ -53,6 +74,19 @@ const Create = {
                 uv, normals, material, texture).generateBuffers()
         if (name) Create.setPrototype(proto)
         return Create.fromPrototype(proto)
+    },
+
+    Sprite(cam, material, diffuseTexture) {
+        const plane = Create.new('Sprite')
+        plane.material = material || Materials.DUMMY_MATERIAL
+        plane.texture.diffuse = diffuseTexture || null
+
+        plane.model.update = dt => {
+            const c = cam.model.orientation()
+            plane.model.rotationMatrix = mat4.inverseRotate(c.y, c.x, c.z)
+        }
+
+        return plane
     },
 
     fromOBJSource(name, source) {
