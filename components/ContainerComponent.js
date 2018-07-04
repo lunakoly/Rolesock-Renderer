@@ -3,8 +3,10 @@ class ContainerComponent {
         this.spriteChildren = []
         this.opaqueChildren = []
         this.transparentChildren = []
+
         this.containerChildren = []
-        this.lightSources = []
+
+        this.directionalLightSources = []
     }
 
     addActor(actor) {
@@ -34,34 +36,22 @@ class ContainerComponent {
     }
 
     addLightSource(lightSource) {
-        this.lightSources.push(lightSource)
+        this.directionalLightSources.push(lightSource)
     }
 
     removeLightSource(lightSource) {
-        this.lightSources.splice(this.lightSources.indexOf(lightSource), 1)
+        this.directionalLightSources.splice(this.directionalLightSources.indexOf(lightSource), 1)
     }
 
     update(dt) {
         this.opaqueChildren.forEach(it => it.update(dt))
         this.transparentChildren.forEach(it => it.update(dt))
         this.spriteChildren.forEach(it => it.update(dt))
-        this.containerChildren.forEach(it => it.update(dt))
-    }
 
-    // drawOpaque(options) {
-    //     this.opaqueChildren.forEach(it => it.draw(options))
-    //     this.containerChildren.forEach(it => it.drawOpaque(options))
-    // }
-    //
-    // drawTransparent(options) {
-    //     this.transparentChildren.forEach(it => it.draw(options))
-    //     this.containerChildren.forEach(it => it.drawTransparent(options))
-    // }
-    //
-    // drawSprite(options) {
-    //     this.spriteChildren.forEach(it => it.draw(options))
-    //     this.containerChildren.forEach(it => it.drawSprite(options))
-    // }
+        this.containerChildren.forEach(it => it.update(dt))
+
+        this.directionalLightSources.forEach(it => it.update(dt))
+    }
 
     forEachOpaque(callback) {
         this.opaqueChildren.forEach(callback)
@@ -78,8 +68,8 @@ class ContainerComponent {
         this.containerChildren.forEach(it => it.forEachSprite(callback))
     }
 
-    forEachLight(callback) {
-        this.lightSources.forEach(callback)
-        this.containerChildren.forEach(it => it.forEachLight(callback))
+    forEachDirectionalLight(callback) {
+        this.directionalLightSources.forEach(callback)
+        this.containerChildren.forEach(it => it.forEachDirectionalLight(callback))
     }
 }

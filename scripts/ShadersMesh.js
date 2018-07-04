@@ -13,11 +13,8 @@ Shaders.MESH_DIFFUSE_LIGHT_SHADERS = {
         uniform mat4 uLightInversedViewMatrix;
 
         uniform struct {
-            int type;
             vec4 color;
-            float radius;
             sampler2D shadow2D;
-            samplerCube shadowCube;
         } uLight;
 
         uniform struct {
@@ -33,37 +30,16 @@ Shaders.MESH_DIFFUSE_LIGHT_SHADERS = {
 
 
         void main(void) {
-            if (uLight.type == 0) {
-                // directional
-                float depth = texture2D(uLight.shadow2D, vLightSpacePosition.xy).x;
+            float depth = texture2D(uLight.shadow2D, vLightSpacePosition.xy).x;
 
-                if (vLightSpacePosition.z <= depth + 0.005) {
-                    // accept light
-                    vec3 portion = uLight.color.rgb * uLight.color.a * dot(vLightSpaceRawNormal, vec3(0, 0, -1));
-                    gl_FragColor = vec4(portion, 1.0);
+            if (vLightSpacePosition.z <= depth + 0.005) {
+                // accept light
+                vec3 portion = uLight.color.rgb * uLight.color.a * dot(vLightSpaceRawNormal, vec3(0, 0, -1));
+                gl_FragColor = vec4(portion, 1.0);
 
-                } else {
-                    // in shadow
-                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-                }
-
-
-            } else if (uLight.type == 1) {
-                // spot
-
-                vec3 worldSpaceLightDirection = -vLightSpaceRawPosition;
-                float depth = textureCube(uLight.shadowCube, worldSpaceLightDirection).x;
-                float distance = depth + 0.005 - worldSpaceLightDirection.z * 0.5 + 0.5;
-
-                if (distance >= 0.0) {
-                    // accept light
-                    vec3 portion = uLight.color.rgb * uLight.color.a * (uLight.radius - distance);
-                    gl_FragColor = vec4(portion, 1.0);
-
-                } else {
-                    // in shadow
-                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-                }
+            } else {
+                // in shadow
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
             }
         }
     `,
@@ -124,11 +100,8 @@ Shaders.MESH_SPECULAR_LIGHT_SHADERS = {
         uniform mat4 uLightInversedViewMatrix;
 
         uniform struct {
-            int type;
             vec4 color;
-            float radius;
             sampler2D shadow2D;
-            samplerCube shadowCube;
         } uLight;
 
         uniform struct {
@@ -145,38 +118,17 @@ Shaders.MESH_SPECULAR_LIGHT_SHADERS = {
 
 
         void main(void) {
-            if (uLight.type == 0) {
-                // directional
-                float depth = texture2D(uLight.shadow2D, vLightSpacePosition.xy).x;
+            float depth = texture2D(uLight.shadow2D, vLightSpacePosition.xy).x;
 
-                if (vLightSpacePosition.z <= depth + 0.005) {
-                    // accept light
-                    vec3 eyeSpaceEyeRay = normalize(vec3(0.0, 0.0, -1.0) - vPosition);
-                    float cos = pow(dot(vEyeSpaceReflectedRay, eyeSpaceEyeRay), uMaterial.shininess);
-                    gl_FragColor = vec4(uLight.color.rgb, uLight.color.a * cos);
+            if (vLightSpacePosition.z <= depth + 0.005) {
+                // accept light
+                vec3 eyeSpaceEyeRay = normalize(vec3(0.0, 0.0, -1.0) - vPosition);
+                float cos = pow(dot(vEyeSpaceReflectedRay, eyeSpaceEyeRay), uMaterial.shininess);
+                gl_FragColor = vec4(uLight.color.rgb, uLight.color.a * cos);
 
-                } else {
-                    // in shadow
-                    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-                }
-
-
-            } else if (uLight.type == 1) {
-                // spot
-
-                vec3 worldSpaceLightDirection = -vLightSpaceRawPosition;
-                float depth = textureCube(uLight.shadowCube, worldSpaceLightDirection).x;
-                float distance = depth + 0.005 - worldSpaceLightDirection.z * 0.5 + 0.5;
-
-                if (distance >= 0.0) {
-                    // accept light
-                    vec3 portion = uLight.color.rgb * uLight.color.a * (uLight.radius - distance);
-                    gl_FragColor = vec4(portion, 1.0);
-
-                } else {
-                    // in shadow
-                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-                }
+            } else {
+                // in shadow
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
             }
         }
     `,

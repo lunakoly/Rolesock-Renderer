@@ -99,8 +99,8 @@ p1.model.rotate(30, 0, 0)
 scene.container.addActor(p1)
 
 
-const lc = new LightComponent('spot', [0, 1, 0, 1])
-lc.model.put(0, 0.5, -1)
+// const lc = new LightComponent('spot', [0, 1, 0, 1])
+// lc.model.put(0, 0.5, -1)
 // scene.container.addLightSource(lc)
 
 

@@ -24,7 +24,6 @@ const Renderer = {
         Renderer.gl.cullFace(Renderer.gl.FRONT)
 
         // used if no data defined for rendering
-        Renderer.emptyCubeMap = Texture.colorCube()
         Renderer.emptyTexture = Texture.color2D().complicate()
         Renderer.emptyMatrix = new mat4()
         Renderer.longOrtho = mat4.ortho(Surface.aspect, 0.1, 100).xM(mat4.scale(0.09, 0.09, 1)).xM(mat4.translate(0, 0, 15))
@@ -156,12 +155,12 @@ const Renderer = {
 
         // Render depth textures for meshes
         Shaders.MESH_DEPTH_SHADERS.program.ensureUsage(options)
-        scene.container.lightSources.forEach(light => Renderer.renderMeshesShadowMapForLight(scene, light))
+        scene.container.directionalLightSources.forEach(light => Renderer.renderMeshesShadowMapForDirectionalLight(scene, light))
 
         // Render depth textures for sprites
         Renderer.gl.disable(Renderer.gl.CULL_FACE)
         Shaders.SPRITE_DEPTH_SHADERS.program.ensureUsage(options)
-        scene.container.lightSources.forEach(light => Renderer.renderSpritesShadowMapForLight(scene, light))
+        scene.container.directionalLightSources.forEach(light => Renderer.renderSpritesShadowMapForDirectionalLight(scene, light))
         Renderer.gl.enable(Renderer.gl.CULL_FACE)
 
 
@@ -192,31 +191,10 @@ const Renderer = {
         // throw new Error('STOP')
     },
 
-    renderMeshesShadowMapForLight(scene, light) {
-        const lightView = light.model.total()
-
-        if (light.type == 'directional') {
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uProjectionMatrix')
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(lightView, 'uViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene)
-
-        } else if (light.type == 'spot') {
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(
-                    mat4.perspective(90, Surface.aspect, 0.01, light.radius), 'uProjectionMatrix')
-
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(lightView, 'uViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, light.shadowMap, scene)
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(90, 0, 0) * lightView, 'uViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, light.shadowMap, scene)
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(180, 0, 0) * lightView, 'uViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, light.shadowMap, scene)
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(-90, 0, 0) * lightView, 'uViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_X, light.shadowMap, scene)
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, 90, 0) * lightView, 'uViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, light.shadowMap, scene)
-            Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, -90, 0) * lightView, 'uViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, light.shadowMap, scene)
-        }
+    renderMeshesShadowMapForDirectionalLight(scene, light) {
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uProjectionMatrix')
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(light.model.total(), 'uViewMatrix')
+        Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene)
     },
 
     renderMeshesToDepthTexture(slot, texture, scene, condition) {
@@ -229,31 +207,10 @@ const Renderer = {
         })
     },
 
-    renderSpritesShadowMapForLight(scene, light) {
-        const lightView = light.model.total()
-
-        if (light.type == 'directional') {
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uLightProjectionMatrix')
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(lightView, 'uLightViewMatrix')
-            Renderer.renderSpritesToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene)
-
-        } else if (light.type == 'spot') {
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(
-                    mat4.perspective(90, Surface.aspect, 0.01, light.radius), 'uLightProjectionMatrix')
-
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(lightView, 'uLightViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, light.shadowMap, scene)
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(90, 0, 0) * lightView, 'uLightViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, light.shadowMap, scene)
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(180, 0, 0) * lightView, 'uLightViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, light.shadowMap, scene)
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(-90, 0, 0) * lightView, 'uLightViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_X, light.shadowMap, scene)
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, 90, 0) * lightView, 'uLightViewMatrix')
-            Renderer.renderMeshesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, light.shadowMap, scene)
-            Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, -90, 0) * lightView, 'uLightViewMatrix')
-            Renderer.renderSpritesToDepthTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, light.shadowMap, scene)
-        }
+    renderSpritesShadowMapForDirectionalLight(scene, light) {
+        Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uLightProjectionMatrix')
+        Shaders.SPRITE_DEPTH_SHADERS.program.setUniformMatrix4fv(light.model.total(), 'uLightViewMatrix')
+        Renderer.renderSpritesToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene)
     },
 
     renderSpritesToDepthTexture(slot, texture, scene, condition) {
@@ -275,7 +232,7 @@ const Renderer = {
         diffLightProg.ensureUsage(options)
 
         // render light impact
-        scene.container.forEachLight(light => Renderer.renderImpactForLight(light, obj, diffLightProg, options))
+        scene.container.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, diffLightProg, options))
 
 
         // specular
@@ -284,7 +241,7 @@ const Renderer = {
         specLightProg.ensureUsage(options)
 
         // render light impact
-        scene.container.forEachLight(light => Renderer.renderImpactForLight(light, obj, specLightProg, options))
+        scene.container.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, specLightProg, options))
 
 
         // summary
@@ -299,26 +256,14 @@ const Renderer = {
         obj.drawSelf(Renderer.emptyMatrix)
     },
 
-    renderImpactForLight(light, obj, prog, options) {
+    renderImpactForDirectionalLight(light, obj, prog, options) {
         prog.setUniformMatrix4fv(light.model.inversed(), 'uLightInversedViewMatrix')
         prog.setUniformMatrix4fv(light.model.total(), 'uLightViewMatrix')
-        prog.setUniform1f(light.radius, 'uLight.radius')
         prog.setVec4(light.color, 'uLight.color')
 
-        if (light.type == 'directional') {
-            prog.setRawTexture(light.shadowMap.texture, Renderer.gl.TEXTURE0, 0, 'uLight.shadow2D')
-            prog.setCubeMap(Renderer.emptyCubeMap.texture, Renderer.gl.TEXTURE1, 1, 'uLight.shadowCube')
-            prog.setUniformMatrix4fv(Renderer.longOrtho, 'uLightProjectionMatrix')
-            prog.setUniform1i(0, 'uLight.type')
-            obj.drawLight(prog, Renderer.emptyMatrix)
-
-        } else if (light.type == 'spot') {
-            prog.setRawTexture(Renderer.emptyTexture.texture, Renderer.gl.TEXTURE0, 0, 'uLight.shadow2D')
-            prog.setCubeMap(light.shadowMap.texture, Renderer.gl.TEXTURE1, 1, 'uLight.shadowCube')
-            prog.setUniformMatrix4fv(mat4.perspective(90, Surface.aspect, 0.01, light.radius), 'uLightProjectionMatrix')
-            prog.setUniform1i(1, 'uLight.type')
-            obj.drawLight(prog, Renderer.emptyMatrix)
-        }
+        prog.setRawTexture(light.shadowMap.texture, Renderer.gl.TEXTURE0, 0, 'uLight.shadow2D')
+        prog.setUniformMatrix4fv(Renderer.longOrtho, 'uLightProjectionMatrix')
+        obj.drawLight(prog, Renderer.emptyMatrix)
     },
 
     updateViewport() {
