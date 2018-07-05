@@ -44,4 +44,9 @@ class Scene {
         this.container.directionalLightSources.forEach(it => callback(it, Renderer.emptyMatrix))
         this.container.containerChildren.forEach(it => it.forEachDirectionalLight(callback, Renderer.emptyMatrix))
     }
+
+    forEachPointLight(callback) {
+        this.container.pointLightSources.forEach(it => callback(it, Renderer.emptyMatrix))
+        this.container.containerChildren.forEach(it => it.forEachPointLight(callback, Renderer.emptyMatrix))
+    }
 }

@@ -105,9 +105,55 @@ p1.model.rotate(30, 0, 0)
 scene.container.addActor(p1)
 
 
-// const lc = new LightComponent('spot', [0, 1, 0, 1])
+const lc = new PointLight([1, 0.7, 0.3, 1])
 // lc.model.put(0, 0.5, -1)
 // scene.container.addLightSource(lc)
+scene.container.removeLightSource(scene.environment.sun)
+lc.radius = 8
+// lc.model.move(-1, 0, 1)
+
+const torch = Create.Sprite(cam, Materials.SHINY, Texture.fromImage('img/torch.png'))
+torch.light = lc
+lc.holder = torch
+scene.container.addActor(torch)
+torch.model.put(-1, 0, 0)
+lc.model.put(0, 0.5, 0)
+
+scene.environment.ambient = [0.05, 0.05, 0.02, 0]
+
+
+// Renderer.setVisualizationTarget(lc.shadowMap, 'depth_color_cube', true)
+obj3.model.move(-1, 0, 2.5)
+obj.model.move(-2, 0, 2)
+obj4.model.move(-2, 0, 0)
+
+
+// BOX
+const p2 = Create.new('Plane')
+// p2.material.diffuse = [1, 1, 1, 1]
+scene.container.addActor(p2)
+p2.model.rotate(90, 0, 0)
+p2.model.put(-10, 5, 0)
+p2.model.scale(10, 5, 1)
+
+const p3 = Create.new('Plane')
+scene.container.addActor(p3)
+p3.model.rotate(-90, 0, 0)
+p3.model.put(10, 5, 0)
+p3.model.scale(10, 5, 1)
+
+const p4 = Create.new('Plane')
+scene.container.addActor(p4)
+// p3.model.rotate(0, 0, 0)
+p4.model.put(0, 5, 10)
+p4.model.scale(10, 5, 1)
+
+const p5 = Create.new('Plane')
+scene.container.addActor(p5)
+p5.model.rotate(180, 0, 0)
+p5.model.put(0, 5, -10)
+p5.model.scale(10, 5, 1)
+
 
 
 sht()

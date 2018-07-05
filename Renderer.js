@@ -28,8 +28,11 @@ const Renderer = {
         // used if no data defined for rendering
         Renderer.emptyMatrix = new mat4()
         Renderer.emptyTexture = Texture.color2D().complicate()
+        Renderer.emptyCubeTexture = Texture.colorCube(16)
         Renderer.longOrtho = mat4.ortho(Surface.aspect, 0.1, 100).xM(mat4.scale(0.09, 0.09, 1)).xM(mat4.translate(0, 0, 15))
         Renderer.inversedLongOrtho = mat4.translate(0, 0, -15).xM(mat4.scale(1/0.09, 1/0.09, 1)).xM(mat4.inverseOrtho(Surface.aspect, 0.1, 100))
+        Renderer.cubeSidePerspective = mat4.perspective(90, 1, 0.1, 100)
+        Renderer.inversedCubeSidePerspective = mat4.inversePerspective(90, 1, 0.1, 100)
 
         // used by visualization mechanism to display screen texture
         Renderer.screenMesh = {
@@ -45,7 +48,7 @@ const Renderer = {
             ])
         }
 
-        Renderer.setVisualizationTarget(Renderer.colorTexture, false, false)
+        Renderer.setVisualizationTarget(Renderer.colorTexture, 'color', false)
     },
 
     setClearColor(color) {
@@ -59,6 +62,8 @@ const Renderer = {
         Renderer.initializeShaderProgram(Shaders.MESH_DEPTH_SHADERS)
         Renderer.initializeShaderProgram(Shaders.MESH_DIFFUSE_LIGHT_SHADERS)
         Renderer.initializeShaderProgram(Shaders.MESH_SPECULAR_LIGHT_SHADERS)
+
+        Renderer.initializeShaderProgram(Shaders.MESH_DIFFUSE_POINT_LIGHT_SHADERS)
     },
 
     initializeShaderProgram(shaders) {
@@ -69,7 +74,7 @@ const Renderer = {
         Surface.layers.forEach(Renderer.renderScene)
     },
 
-    visualizeTexture(texture, isDepthTexture, doLinearization) {
+    visualizeTexture(texture, type, doLinearization) {
         Renderer.gl.bindFramebuffer(Renderer.gl.FRAMEBUFFER, null)
         Renderer.gl.viewport(0, 0, Surface.space.clientWidth, Surface.space.clientHeight)
         Renderer.gl.clearColor(0, 0, 0, 1)
@@ -77,21 +82,45 @@ const Renderer = {
 
         Shaders.TEXTURE_VISUALIZATION_SHADERS.program.use()
         Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setAttribute(Renderer.screenMesh.uvBuffer, 2, 'aTexture')
-        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setRawTexture(texture.texture, Renderer.gl.TEXTURE0, 0, 'uTarget')
-        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(isDepthTexture ? 1 : 0, 'uIsDepthTexture')
+
+        if (type == 'color') {
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setCubeMap(Renderer.emptyCubeTexture.texture, Renderer.gl.TEXTURE1, 1, 'uTargetCube')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setRawTexture(texture.texture, Renderer.gl.TEXTURE0, 0, 'uTarget2D')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsDepthColorTexture')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsDepthTexture')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsCubeTexture')
+        } else if (type == 'depth') {
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setCubeMap(Renderer.emptyCubeTexture.texture, Renderer.gl.TEXTURE1, 1, 'uTargetCube')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setRawTexture(texture.texture, Renderer.gl.TEXTURE0, 0, 'uTarget2D')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsDepthColorTexture')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(1, 'uIsDepthTexture')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsCubeTexture')
+        } else if (type == 'color_cube') {
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setCubeMap(texture.texture, Renderer.gl.TEXTURE1, 1, 'uTargetCube')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setRawTexture(Renderer.emptyTexture.texture, Renderer.gl.TEXTURE0, 0, 'uTarget2D')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsDepthColorTexture')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsDepthTexture')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(1, 'uIsCubeTexture')
+        } else if (type == 'depth_color_cube') {
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setCubeMap(texture.texture, Renderer.gl.TEXTURE1, 1, 'uTargetCube')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setRawTexture(Renderer.emptyTexture.texture, Renderer.gl.TEXTURE0, 0, 'uTarget2D')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(1, 'uIsDepthColorTexture')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsDepthTexture')
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(1, 'uIsCubeTexture')
+        }
 
         if (doLinearization)
-            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uDoLinearization')
-        else
             Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(1, 'uDoLinearization')
+        else
+            Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uDoLinearization')
 
         Shaders.TEXTURE_VISUALIZATION_SHADERS.program.drawElements(Renderer.screenMesh.orderBuffer, 6)
     },
 
-    setVisualizationTarget(texture, isDepthTexture, doLinearization) {
+    setVisualizationTarget(texture, type, doLinearization) {
         Renderer.visualizationTarget = {
+            type: type,
             texture: texture,
-            isDepthTexture: isDepthTexture,
             doLinearization: doLinearization
         }
     },
@@ -99,6 +128,20 @@ const Renderer = {
     prepareFramebufferForDepthTesting() {
         Renderer.drawBuffersExt.drawBuffersWEBGL([Renderer.gl.NONE])
         Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, null, 0)
+
+        Renderer.gl.disable(Renderer.gl.BLEND)
+        Renderer.gl.disable(Renderer.gl.CULL_FACE)
+
+        Renderer.gl.enable(Renderer.gl.DEPTH_TEST)
+        Renderer.gl.depthFunc(Renderer.gl.LEQUAL)
+        Renderer.gl.depthMask(true)
+    },
+
+    prepareFramebufferForDepthColorTesting() {
+        Renderer.drawBuffersExt.drawBuffersWEBGL([Renderer.gl.COLOR_ATTACHMENT0])
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, null, 0)
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.DEPTH_ATTACHMENT, Renderer.gl.TEXTURE_2D, null, 0)
+        Renderer.gl.clearColor(1, 1, 1, 1)
 
         Renderer.gl.disable(Renderer.gl.BLEND)
         Renderer.gl.disable(Renderer.gl.CULL_FACE)
@@ -162,6 +205,18 @@ const Renderer = {
         scene.container.directionalLightSources.forEach(light => Renderer.renderShadowMapForDirectionalLight(scene, light))
 
 
+        // render depth-color cubemaps for point lights
+        Renderer.prepareFramebufferForDepthColorTesting()
+        scene.container.pointLightSources.forEach(light => Renderer.renderShadowMapForPointLight(scene, light))
+
+
+        // Renderer.visualizeTexture(scene.container.pointLightSources[0].shadowMap, 'depth_color_cube', true)
+        // Renderer.visualizeTexture(scene.environment.sun.shadowMap, 'depth', false)
+        // Renderer.visualizeTexture(Renderer.depthTexture, 'depth', true)
+        // throw new Error('STOP')
+        // return;
+
+
         // Render light textures and final color one
         Renderer.prepareFramebufferForColorRendering()
 
@@ -177,7 +232,7 @@ const Renderer = {
         // print out to screen
         Renderer.visualizeTexture(
                 Renderer.visualizationTarget.texture,
-                Renderer.visualizationTarget.isDepthTexture,
+                Renderer.visualizationTarget.type,
                 Renderer.visualizationTarget.doLinearization)
 
         // throw new Error('STOP')
@@ -199,6 +254,37 @@ const Renderer = {
         })
     },
 
+    renderShadowMapForPointLight(scene, light) {
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.DEPTH_ATTACHMENT, Renderer.gl.TEXTURE_2D, light.shadowMapHelper.texture, 0)
+
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.cubeSidePerspective, 'uProjectionMatrix')
+        const viewMatrix = light.getInversedModel()
+
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(viewMatrix, 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(-90, 0, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(180, 0, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(90, 0, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_X, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, -90, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
+        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, 90, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
+    },
+
+    renderToColorTexture(slot, texture, scene, prog, excludeObject) {
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, slot, texture.texture, 0)
+        Renderer.gl.viewport(0, 0, texture.width, texture.height)
+        Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT | Renderer.gl.DEPTH_BUFFER_BIT)
+
+        scene.forEachOpaque((it, parentModelMatrix) => {
+            if (excludeObject != it)
+                it.draw(prog, parentModelMatrix, 'shape')
+        })
+    },
+
     renderObject(scene, obj, parentModelMatrix, options) {
         Renderer.gl.blendFunc(Renderer.gl.ONE, Renderer.gl.ONE)
 
@@ -209,6 +295,12 @@ const Renderer = {
 
         // render light impact
         scene.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, parentModelMatrix, diffLightProg, options))
+
+
+        const diffPointLightProg = obj.diffusePointLightShaderProgram.program
+        diffPointLightProg.ensureUsage(options)
+        // render light impact
+        scene.forEachPointLight(light => Renderer.renderImpactForPointLight(light, obj, parentModelMatrix, diffPointLightProg, options))
 
 
         // specular
@@ -239,6 +331,17 @@ const Renderer = {
 
         prog.setRawTexture(light.shadowMap.texture, Renderer.gl.TEXTURE0, 0, 'uLight.shadow2D')
         prog.setUniformMatrix4fv(Renderer.longOrtho, 'uLightProjectionMatrix')
+        obj.draw(prog, parentModelMatrix, 'light')
+    },
+
+    renderImpactForPointLight(light, obj, parentModelMatrix, prog, options) {
+        prog.setUniformMatrix4fv(Renderer.cubeSidePerspective, 'uLightProjectionMatrix')
+        prog.setUniformMatrix4fv(light.getInversedModel(), 'uLightViewMatrix')
+        prog.setUniformMatrix4fv(light.getModel(), 'uLightInversedViewMatrix')
+        prog.setUniform1f(light.radius, 'uLight.radius')
+        prog.setVec4(light.color, 'uLight.color')
+
+        prog.setCubeMap(light.shadowMap.texture, Renderer.gl.TEXTURE0, 0, 'uLight.shadowCube')
         obj.draw(prog, parentModelMatrix, 'light')
     },
 

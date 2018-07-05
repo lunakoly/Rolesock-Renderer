@@ -8,6 +8,7 @@ class ContainerComponent {
         this.containerChildren = []
 
         this.directionalLightSources = []
+        this.pointLightSources = []
     }
 
     addActor(actor) {
@@ -37,11 +38,17 @@ class ContainerComponent {
     }
 
     addLightSource(lightSource) {
-        this.directionalLightSources.push(lightSource)
+        if (lightSource.type == 'directional')
+            this.directionalLightSources.push(lightSource)
+        else
+            this.pointLightSources.push(lightSource)
     }
 
     removeLightSource(lightSource) {
-        this.directionalLightSources.splice(this.directionalLightSources.indexOf(lightSource), 1)
+        if (lightSource.type == 'directional')
+            this.directionalLightSources.splice(this.directionalLightSources.indexOf(lightSource), 1)
+        else
+            this.pointLightSources.splice(this.pointLightSources.indexOf(lightSource), 1)
     }
 
     update(dt) {
@@ -51,5 +58,6 @@ class ContainerComponent {
         this.containerChildren.forEach(it => it.update(dt))
 
         this.directionalLightSources.forEach(it => it.update(dt))
+        this.pointLightSources.forEach(it => it.update(dt))
     }
 }

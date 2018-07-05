@@ -26,4 +26,10 @@ class Group {
         this.container.directionalLightSources.forEach(it => callback(it, modelMatrix))
         this.container.containerChildren.forEach(it => it.forEachDirectionalLight(callback, modelMatrix))
     }
+
+    forEachPointLight(callback, parentModelMatrix) {
+        const modelMatrix = parentModelMatrix.xM(this.model.total())
+        this.container.pointLightSources.forEach(it => callback(it, modelMatrix))
+        this.container.containerChildren.forEach(it => it.forEachPointLight(callback, modelMatrix))
+    }
 }

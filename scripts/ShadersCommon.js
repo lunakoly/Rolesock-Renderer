@@ -5,27 +5,95 @@ Shaders.TEXTURE_VISUALIZATION_SHADERS = {
     fragment: `
         precision lowp float;
 
-        uniform sampler2D uTarget;
+        uniform sampler2D uTarget2D;
+        uniform samplerCube uTargetCube;
+
         uniform int uDoLinearization;
+        uniform int uIsCubeTexture;
         uniform int uIsDepthTexture;
+        uniform int uIsDepthColorTexture;
 
         varying vec2 vTexture;
 
-        void main(void) {
-            if (uIsDepthTexture == 1) {
-                float depth = texture2D(uTarget, vTexture).r;
 
-                // perspective linearization required
-                if (uDoLinearization == 1) {
-                    float zNear = 0.1;
-                    float zFar = 100.0;
-                    depth = (2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear));
+        float vToO(vec4 v) {
+            return (v.x + v.y + v.z + v.w) / 4.0;
+        }
+
+        float tryLinearize(float depth) {
+            if (uDoLinearization == 0) return depth;
+            float zNear = 0.1;
+            float zFar = 100.0;
+            return (2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear));
+        }
+
+        float unwrap(float val) {
+            return val * 2.0 - 1.0;
+        }
+
+
+        void main(void) {
+            if (uIsCubeTexture == 1) {
+                vec3 grabber = vec3(0.0, 0.0, 0.0);
+                vec2 tex = vec2(vTexture.x, 1.0 - vTexture.y);
+
+                if (tex.x < 0.25) {
+                    grabber = vec3(-1.0, unwrap(tex.y) * 3.0, unwrap(tex.x / 0.25));
+                } else if (tex.x < 0.5) {
+                    if (tex.y < 0.333) {
+                        grabber = vec3(unwrap((tex.x - 0.25) / 0.25), -1.0, unwrap(tex.y / 0.333));
+                    } else if (tex.y > 0.666) {
+                        grabber = vec3(unwrap((tex.x - 0.25) / 0.25), 1.0, unwrap((tex.y - 0.666) / 0.333));
+                    } else {
+                        grabber = vec3(unwrap((tex.x - 0.25) / 0.25), unwrap((tex.y - 0.333) / 0.333), 1.0);
+                    }
+
+                } else if (tex.x < 0.75) {
+                    grabber = vec3(1.0, unwrap(tex.y) * 3.0, -unwrap((tex.x - 0.5) / 0.25));
+                } else {
+                    grabber = vec3(-unwrap((tex.x - 0.75) / 0.25), unwrap(tex.y) * 3.0, -1.0);
                 }
 
-                gl_FragColor = vec4(depth, depth, depth, 1.0);
+
+
+                // if (vTexture.x < 0.333) {
+                //     grabber = vec3(unwrap(vTexture.x / 0.333), unwrap(vTexture.y), 1.0);
+                // } else if (vTexture.x < 0.666) {
+                //     grabber = vec3(1.0, unwrap(vTexture.y), unwrap((vTexture.x - 0.333) / 0.333));
+                // } else {
+                //     grabber = vec3(unwrap((vTexture.x - 0.666) / 0.333), 1.0, unwrap(vTexture.y));
+                // }
+                //
+                // if (vTexture.y < 0.5) grabber = -grabber;
+                vec4 resolved = textureCube(uTargetCube, grabber);
+
+
+                if (uIsDepthTexture == 1) {
+                    float depth = tryLinearize(resolved.r);
+                    gl_FragColor = vec4(depth, depth, depth, 1.0);
+
+                } else if (uIsDepthColorTexture == 1) {
+                    float depth = tryLinearize(vToO(resolved));
+                    gl_FragColor = vec4(depth, depth, depth, 1.0);
+
+                } else {
+                    gl_FragColor = resolved;
+                }
 
             } else {
-                gl_FragColor = texture2D(uTarget, vTexture);
+                vec4 resolved = texture2D(uTarget2D, vTexture);
+
+                if (uIsDepthTexture == 1) {
+                    float depth = tryLinearize(resolved.r);
+                    gl_FragColor = vec4(depth, depth, depth, 1.0);
+
+                } else if (uIsDepthColorTexture == 1) {
+                    float depth = tryLinearize(vToO(resolved));
+                    gl_FragColor = vec4(depth, depth, depth, 1.0);
+
+                } else {
+                    gl_FragColor = texture2D(uTarget2D, vTexture);
+                }
             }
         }
     `,
@@ -103,10 +171,10 @@ Shaders.MESH_DEPTH_SHADERS = {
 
             if (alpha != 1.0) {
                 gl_FragDepthEXT = 1.0;
-                // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
             } else {
                 gl_FragDepthEXT = gl_FragCoord.z + 0.0001;
-                // gl_FragColor = oToV(gl_FragDepthEXT);
+                gl_FragColor = oToV(gl_FragDepthEXT);
             }
         }
     `,

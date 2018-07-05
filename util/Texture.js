@@ -118,8 +118,8 @@ class Texture {
         return new Texture().assumingItIs2D().useNoFiltering().doClamp().beColor2D().unbind()
     }
 
-    static depth2D() {
-        return new Texture().assumingItIs2D().useLinearFiltering().doClamp().scale(1024, 1024).beDepth2D().unbind()
+    static depth2D(size) {
+        return new Texture().assumingItIs2D().useLinearFiltering().doClamp().scale(size, size).beDepth2D().unbind()
     }
 
     static screenColor() {
@@ -130,12 +130,12 @@ class Texture {
         return new Texture().assumingItIs2D().useNoFiltering().doClamp().scaleToScreen().beDepth2D().unbind()
     }
 
-    static colorCube() {
-        return new Texture().assumingItIsCube().useNoFiltering().doClamp().beColorCube().unbind()
+    static colorCube(size) {
+        return new Texture().assumingItIsCube().useNoFiltering().doClamp().scale(size, size).beColorCube().unbind()
     }
 
-    static depthCube() {
-        return new Texture().assumingItIsCube().useNoFiltering().doClamp().scale(512, 512).beDepthCube().unbind()
+    static depthCube(size) {
+        return new Texture().assumingItIsCube().useNoFiltering().doClamp().scale(size, size).beDepthCube().unbind()
     }
 
     static isPowerOfTwo(image) {

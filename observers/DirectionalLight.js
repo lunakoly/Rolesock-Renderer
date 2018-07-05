@@ -4,6 +4,6 @@ class DirectionalLight extends Observer {
         this.type = 'directional'
         this.color = color
 
-        this.shadowMap = Texture.depth2D()
+        this.shadowMap = Texture.depth2D(1024)
     }
 }

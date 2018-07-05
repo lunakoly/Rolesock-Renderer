@@ -16,6 +16,8 @@ class Mesh {
         this.selfShaderProgram = Shaders.MESH_SELF_SHADERS
         this.diffuseLightShaderProgram = Shaders.MESH_DIFFUSE_LIGHT_SHADERS
         this.specularLightShaderProgram = Shaders.MESH_SPECULAR_LIGHT_SHADERS
+
+        this.diffusePointLightShaderProgram = Shaders.MESH_DIFFUSE_POINT_LIGHT_SHADERS
     }
 
     update(dt) {
