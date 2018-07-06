@@ -4,6 +4,7 @@ Shaders.COMPILATION_SHADERS = {
 
         uniform sampler2D uLightDiffuseTexture;
         uniform sampler2D uLightSpecularTexture;
+        uniform int uIsRenderingOpaque;
 
         uniform struct {
             vec4 diffuse;
@@ -29,7 +30,6 @@ Shaders.COMPILATION_SHADERS = {
 
         varying vec4 vPosition;
         varying vec2 vTexture;
-
 
         vec4 blend(vec4 primary, vec4 secondary) {
             vec3 newColor = primary.rgb * primary.a + secondary.rgb * (1.0 - primary.a);
@@ -80,7 +80,12 @@ Shaders.COMPILATION_SHADERS = {
 
             // final
             primary.a *= uMaterial.opacity;
-            gl_FragColor = primary;
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+            if (uIsRenderingOpaque == 1 && primary.a == 1.0 ||
+                uIsRenderingOpaque == 0 && primary.a != 1.0) {
+                gl_FragColor = primary;
+            }
         }
     `,
 

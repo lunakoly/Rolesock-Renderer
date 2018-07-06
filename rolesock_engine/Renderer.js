@@ -48,7 +48,7 @@ const Renderer = {
             ])
         }
 
-        Renderer.setVisualizationTarget(Renderer.colorTexture, 'color', false)
+        Renderer.setVisualizationTarget(Renderer.colorTexture, 'color', false, Renderer.transparentHelperTexture)
     },
 
     initializeShaderPrograms() {
@@ -81,6 +81,7 @@ const Renderer = {
         Renderer.gl.viewport(0, 0, Surface.space.clientWidth, Surface.space.clientHeight)
         Renderer.gl.clearColor(0, 0, 0, 1)
         Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT)
+        Renderer.gl.blendFunc(Renderer.gl.ONE, Renderer.gl.ONE)
 
         Shaders.TEXTURE_VISUALIZATION_SHADERS.program.use()
         Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setAttribute(Renderer.screenMesh.uvBuffer, 2, 'aTexture')
@@ -119,11 +120,23 @@ const Renderer = {
         Shaders.TEXTURE_VISUALIZATION_SHADERS.program.drawElements(Renderer.screenMesh.orderBuffer, 6)
     },
 
-    setVisualizationTarget(texture, type, doLinearization) {
+    continueColorVisualization(texture) {
+        Renderer.gl.blendFunc(Renderer.gl.ONE, Renderer.gl.ONE_MINUS_SRC_ALPHA)
+        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setCubeMap(Renderer.emptyCubeTexture.texture, Renderer.gl.TEXTURE1, 1, 'uTargetCube')
+        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setRawTexture(texture.texture, Renderer.gl.TEXTURE0, 0, 'uTarget2D')
+        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsDepthColorTexture')
+        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsDepthTexture')
+        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uIsCubeTexture')
+        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.setUniform1i(0, 'uDoLinearization')
+        Shaders.TEXTURE_VISUALIZATION_SHADERS.program.drawElements(Renderer.screenMesh.orderBuffer, 6)
+    },
+
+    setVisualizationTarget(texture, type, doLinearization, postVisualizationTexture) {
         Renderer.visualizationTarget = {
             type: type,
             texture: texture,
-            doLinearization: doLinearization
+            doLinearization: doLinearization,
+            postVisualizationTexture: postVisualizationTexture
         }
     },
 
@@ -154,7 +167,6 @@ const Renderer = {
     prepareFramebufferForColorRendering() {
         Renderer.drawBuffersExt.drawBuffersWEBGL([Renderer.gl.COLOR_ATTACHMENT0])
         Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.DEPTH_ATTACHMENT, Renderer.gl.TEXTURE_2D, Renderer.depthTexture.texture, 0)
-        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.colorTexture.texture, 0)
 
         Renderer.gl.enable(Renderer.gl.BLEND)
         Renderer.gl.enable(Renderer.gl.CULL_FACE)
@@ -165,6 +177,10 @@ const Renderer = {
 
         Renderer.gl.viewport(0, 0, Surface.space.clientWidth, Surface.space.clientHeight)
         Renderer.gl.clearColor(0, 0, 0, 0)
+
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.colorTexture.texture, 0)
+        Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT)
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.transparentHelperTexture.texture, 0)
         Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT)
     },
 
@@ -220,11 +236,11 @@ const Renderer = {
         // + render objects to final color texture
         // console.log('RUN');
         scene.forEachOpaque((it, parentModelMatrix) =>
-                Renderer.renderObject(scene, it, parentModelMatrix, options))
+                Renderer.renderObject(scene, it, parentModelMatrix, options, false))
         // console.log('STEP');
         // for transparent
         scene.forEachTransparent((it, parentModelMatrix) =>
-                Renderer.renderObject(scene, it, parentModelMatrix, options))
+                Renderer.renderObject(scene, it, parentModelMatrix, options, true))
 
 
         // print out to screen
@@ -232,6 +248,9 @@ const Renderer = {
                 Renderer.visualizationTarget.texture,
                 Renderer.visualizationTarget.type,
                 Renderer.visualizationTarget.doLinearization)
+
+        if (Renderer.visualizationTarget.postVisualizationTexture)
+            Renderer.continueColorVisualization(Renderer.visualizationTarget.postVisualizationTexture)
 
         // throw new Error('STOP')
     },
@@ -283,7 +302,7 @@ const Renderer = {
         })
     },
 
-    renderObject(scene, obj, parentModelMatrix, options) {
+    renderObject(scene, obj, parentModelMatrix, options, isObjectFullyTransparent) {
         Renderer.gl.blendFunc(Renderer.gl.ONE, Renderer.gl.ONE)
 
         // for optimization
@@ -324,17 +343,21 @@ const Renderer = {
 
 
         // summary
-        Renderer.gl.blendFunc(Renderer.gl.SRC_ALPHA, Renderer.gl.ONE_MINUS_SRC_ALPHA)
-        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.colorTexture.texture, 0)
-
         const selfProg = Shaders.COMPILATION_SHADERS.program
         selfProg.ensureUsage(options)
         selfProg.setRawTexture(Renderer.diffuseLightTexture.texture, Renderer.gl.TEXTURE2, 2, 'uLightDiffuseTexture')
         selfProg.setRawTexture(Renderer.specularLightTexture.texture, Renderer.gl.TEXTURE3, 3, 'uLightSpecularTexture')
+        Renderer.gl.blendFunc(Renderer.gl.SRC_ALPHA, Renderer.gl.ONE_MINUS_SRC_ALPHA)
 
+        if (!isObjectFullyTransparent) {
+            Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.colorTexture.texture, 0)
+            selfProg.setUniform1i(1, 'uIsRenderingOpaque')
+            obj.draw(selfProg, parentModelMatrix, 'self')
+        }
+
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.transparentHelperTexture.texture, 0)
+        selfProg.setUniform1i(0, 'uIsRenderingOpaque')
         obj.draw(selfProg, parentModelMatrix, 'self')
-
-        // console.log(obj.tag);
     },
 
     renderImpactForDirectionalLight(light, obj, parentModelMatrix, prog, options) {
@@ -397,6 +420,8 @@ const Renderer = {
         Renderer.depthTexture = Texture.screenDepth()
         // SCENE RESULT COLOR TEXTURE
         Renderer.colorTexture = Texture.screenColor()
+        // SCENE RESULT COLOR TEXTURE FOR TRANSPARENT
+        Renderer.transparentHelperTexture = Texture.screenColor()
         // TEMPORARY DIFFUSE LIGHT TEXTURE
         Renderer.diffuseLightTexture = Texture.screenColor()
         // TEMPORARY SPECULAR LIGHT TEXTURE

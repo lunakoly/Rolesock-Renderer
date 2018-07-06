@@ -58,7 +58,7 @@ sphere.controller.update = dt => {
 
 
 const glassPane = Create.new('Plane')
-// glassPane.material.isFullyTransparent = true
+glassPane.material.isFullyTransparent = true
 scene.container.addActor(glassPane)
 glassPane.material = new MaterialComponent()
 glassPane.material.diffuse = [0.9, 1, 0.9, 1]
@@ -72,7 +72,7 @@ glassPane.tag = 'damn'
 
 const torch = Create.Sprite(cam, Materials.CHARACTER, Texture.fromImage('img/torch.png'))
 torch.texture.diffuse.animateHorizontal(500, 4)
-torch.material.isFullyTransparent = true
+// torch.material.isFullyTransparent = true
 torch.model.put(-1, 0, 0)
 
 // bind new light to the torch
