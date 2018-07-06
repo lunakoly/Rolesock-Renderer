@@ -5,7 +5,8 @@ class TextureComponent {
     }
 
     update(dt) {
-        
+        if (this.diffuse) this.diffuse.update(dt)
+        if (this.specular) this.specular.update(dt)
     }
 
     isNotEmpty() {

@@ -1,170 +1,155 @@
+/////////// STARTUP ///////////
 Engine.initialize()
 
-
-const cam = new PerspectiveCamera(45, 0.1, 100)
-// cam.model.put(0, 1, -3)
-cam.model.shift(0, 0.2, -3.7)
-
-
-// const fpsControls = new FPSControls(cam)
-const mmoControls = new MMOControls(cam)
-
-const scene = new Scene(cam)
-scene.cameraControls = mmoControls
-
-Surface.addLayer(scene)
-
-
-const ground1 = Create.new('Plane')
-scene.container.addActor(ground1)
-
-ground1.model.turn(0, -90, 0)
-ground1.model.fit(10, 10, 1)
-ground1.texture.diffuse = Texture.fromImage('img/ground.png')
-ground1.texture.diffuse.scale.x = 10
-ground1.texture.diffuse.scale.y = 10
-
-scene.environment.sunDirection = [0, 0.5, -0.5]
-
-
-Materials.SHINY = new MaterialComponent()
-Materials.SHINY.diffuse = [1, 1, 1, 0]
-Materials.SHINY.specular = [0.7, 0.7, 1, 0.3]
-Materials.SHINY.shininess = 1024
-
-const char = Create.Sprite(cam, Materials.SHINY)
-char.texture.diffuse = Texture.fromImage('img/char.png')
-scene.container.addActor(char)
-
-// char.model.put(0, 0.35, 0)
-
-
-function fpsctl() {
-    const fpsControls = new FPSControls(cam)
-    scene.cameraControls = fpsControls
-}
-
-function sht() {
-    cam.model.shift(0, 0, -3)
+Engine.globalUpdate = dt => {
+    fps.innerText = 'FPS : ' + Engine.FPS
 }
 
 
-
-
+/////////// MATERIALS ///////////
+Materials.CHARACTER = new MaterialComponent()
+Materials.CHARACTER.diffuse = [1, 1, 1, 0]
+Materials.CHARACTER.specular = [0.7, 0.7, 1, 0.3]
+Materials.CHARACTER.shininess = 1024
 
 Materials.PASTEL_BLOOD_MATERIAL = new MaterialComponent()
 Materials.PASTEL_BLOOD_MATERIAL.diffuse = [1, 0.38, 0.38, 1]
 Materials.PASTEL_BLOOD_MATERIAL.specular = [0.6, 1, 1, 0.7]
 
-const obj = Create.fromOBJSource('fuck', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
 
-scene.container.addActor(obj)
-obj.model.move(0, 1, 0)
-obj.model.move(1, 1, 0.5)
+/////////// ENVIRONMENT ///////////
+const cam = new PerspectiveCamera(45, 0.1, 100)
+cam.model.shift(0, 0.2, -6)
 
+const scene = new Layer(cam)
+Surface.addLayer(scene)
 
-// SUB
-const obj2 = Create.fromOBJSource('fuck', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
-scene.container.addActor(obj2)
-obj2.model.move(1, 1, 2)
+scene.environment.ambient = [0.05, 0.05, 0.02, 0]
+scene.cameraControls = new MMOControls(cam)
 
-// SUB
-const obj3 = Create.fromOBJSource('fuck', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
-// scene.container.addActor(obj3)
-obj3.model.move(-2, 1, -3)
-
-// SUB
-const obj4 = Create.fromOBJSource('fuck', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
-// scene.container.addActor(obj4)
-obj4.model.move(2, 1, -3)
-
-
-const group1 = new Group()
-group1.container.addActor(obj3)
-group1.container.addActor(obj4)
-scene.container.addActor(group1)
-group1.model.scale(1, 0.5, 1)
-
-obj.controller.update = dt => {
-    obj.model.rotate(dt / 10, 0, 0)
-    obj.model.rotate(0, dt / 100, 0)
-
+scene.controller.update = dt => {
     scene.environment.sun.model.rotate(dt / 30, 0, 0)
 }
 
 
-// SUB
-const p1 = Create.new('Plane')
-p1.material = new MaterialComponent()
-p1.material.isTransparent = true
-p1.material.diffuse = [0.9, 1, 0.9, 1]
-p1.material.opacity = 0.5
-p1.material.specular = [1.0, 0, 0, 1]
-p1.model.put(-2, 0.7, 0)
-p1.model.rotate(30, 0, 0)
-scene.container.addActor(p1)
+/////////// OBJECTS ///////////
+const ground = Create.new('Plane')
+scene.container.addActor(ground)
+ground.model.turn(0, -90, 0)
+ground.model.fit(10, 10, 1)
+ground.texture.diffuse = Texture.fromImage('img/ground.png')
+ground.texture.diffuse.scale.x = 10
+ground.texture.diffuse.scale.y = 10
 
 
-const lc = new PointLight([1, 0.7, 0.3, 1])
-// lc.model.put(0, 0.5, -1)
-// scene.container.addLightSource(lc)
-scene.container.removeLightSource(scene.environment.sun)
-lc.radius = 8
-// lc.model.move(-1, 0, 1)
-
-const torch = Create.Sprite(cam, Materials.SHINY, Texture.fromImage('img/torch.png'))
-torch.light = lc
-lc.holder = torch
-scene.container.addActor(torch)
-torch.model.put(-1, 0, 0)
-lc.model.put(0, 0.5, 0)
-
-scene.environment.ambient = [0.05, 0.05, 0.02, 0]
+const char = Create.Sprite(cam, Materials.CHARACTER, Texture.fromImage('img/char.png'))
+scene.container.addActor(char)
 
 
-// Renderer.setVisualizationTarget(lc.shadowMap, 'depth_color_cube', true)
-obj3.model.move(-1, 0, 2.5)
-obj.model.move(-2, 0, 2)
-obj4.model.move(-2, 0, 0)
+const sphere = Create.fromOBJSource('Sphere', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
+scene.container.addActor(sphere)
+sphere.model.move(-1, 2, 2.5)
 
 
-// BOX
-const p2 = Create.new('Plane')
-// p2.material.diffuse = [1, 1, 1, 1]
-scene.container.addActor(p2)
-p2.model.rotate(90, 0, 0)
-p2.model.put(-10, 5, 0)
-p2.model.scale(10, 5, 1)
-
-const p3 = Create.new('Plane')
-scene.container.addActor(p3)
-p3.model.rotate(-90, 0, 0)
-p3.model.put(10, 5, 0)
-p3.model.scale(10, 5, 1)
-
-const p4 = Create.new('Plane')
-scene.container.addActor(p4)
-// p3.model.rotate(0, 0, 0)
-p4.model.put(0, 5, 10)
-p4.model.scale(10, 5, 1)
-
-const p5 = Create.new('Plane')
-scene.container.addActor(p5)
-p5.model.rotate(180, 0, 0)
-p5.model.put(0, 5, -10)
-p5.model.scale(10, 5, 1)
-
-
-
-sht()
-fpsctl()
-
-function pb(arr, n) {
-    console.log('+---------------------+');
-    for (let i = 0; i < arr.length / n; i++) {
-        let out = ''
-        for (let j = 0; j < n; j++)
-            out += arr[i * n + j] + '\t'
-        console.log(out);
-    }
+sphere.controller.update = dt => {
+    sphere.model.rotate(dt / 10, 0, 0)
+    sphere.model.rotate(0, dt / 100, 0)
 }
+
+
+const glassPane = Create.new('Plane')
+// glassPane.material.isFullyTransparent = true
+scene.container.addActor(glassPane)
+glassPane.material = new MaterialComponent()
+glassPane.material.diffuse = [0.9, 1, 0.9, 1]
+glassPane.material.opacity = 0.5
+glassPane.material.specular = [1.0, 0, 0, 1]
+glassPane.model.rotate(30, 0, 0)
+glassPane.model.put(-2, 0.7, 0)
+
+glassPane.tag = 'damn'
+
+
+const torch = Create.Sprite(cam, Materials.CHARACTER, Texture.fromImage('img/torch.png'))
+torch.texture.diffuse.animateHorizontal(500, 4)
+torch.material.isFullyTransparent = true
+torch.model.put(-1, 0, 0)
+
+// bind new light to the torch
+torch.light = new PointLight([1, 0.7, 0.3, 1])
+torch.light.holder = torch
+torch.light.model.put(0, 1, 0)
+torch.light.radius = 8
+
+// must be called after ther light has been added
+// otherwise scene.container.addLightSource(torch.light) would be required
+scene.container.addActor(torch)
+
+
+
+
+
+
+/////////// ACTIONS ///////////
+function useFPS() {
+    const fpsControls = new FPSControls(cam)
+    scene.cameraControls = fpsControls
+}
+
+function testGroup() {
+    const obj2 = Create.fromOBJSource('Sphere', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
+    scene.container.addActor(obj2)
+    obj2.model.move(1, 1, 2)
+
+    obj2.tag = 'fuck'
+
+    const obj3 = Create.fromOBJSource('Sphere', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
+    obj3.model.move(-3, 1, -0.5)
+
+    const obj4 = Create.fromOBJSource('Sphere', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
+    obj4.model.move(0, 1, -3)
+
+    const group1 = new Group()
+    group1.container.addActor(obj3)
+    group1.container.addActor(obj4)
+    scene.container.addActor(group1)
+    group1.model.scale(1, 0.5, 1)
+}
+
+function addWalls() {
+    const wall1 = Create.new('Plane')
+    scene.container.addActor(wall1)
+    wall1.model.rotate(90, 0, 0)
+    wall1.model.scale(10, 5, 1)
+    wall1.model.put(-10, 5, 0)
+
+    const wall2 = Create.new('Plane')
+    scene.container.addActor(wall2)
+    wall2.model.rotate(-90, 0, 0)
+    wall2.model.scale(10, 5, 1)
+    wall2.model.put(10, 5, 0)
+
+    const wall3 = Create.new('Plane')
+    scene.container.addActor(wall3)
+    wall3.model.scale(10, 5, 1)
+    wall3.model.put(0, 5, 10)
+
+    const wall4 = Create.new('Plane')
+    scene.container.addActor(wall4)
+    wall4.model.rotate(180, 0, 0)
+    wall4.model.scale(10, 5, 1)
+    wall4.model.put(0, 5, -10)
+}
+
+function maxTest() {
+    moveBack()
+    useFPS()
+    testGroup()
+    addWalls()
+    scene.container.removeLightSource(scene.environment.sun)
+    torch.light.radius = 20
+}
+
+
+testGroup()
+useFPS()

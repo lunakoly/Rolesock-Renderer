@@ -35,5 +35,10 @@ const Engine = {
     update(dt) {
         Surface.update(dt)
         Renderer.update(dt)
+        Engine.globalUpdate(dt)
+    },
+
+    globalUpdate(dt) {
+
     }
 }

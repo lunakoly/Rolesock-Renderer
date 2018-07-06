@@ -51,19 +51,17 @@ const Renderer = {
         Renderer.setVisualizationTarget(Renderer.colorTexture, 'color', false)
     },
 
-    setClearColor(color) {
-        Renderer.gl.clearColor(color[0], color[1], color[2], color[3])
-    },
-
     initializeShaderPrograms() {
         Renderer.initializeShaderProgram(Shaders.TEXTURE_VISUALIZATION_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.DEPTH_SHADERS)
 
-        Renderer.initializeShaderProgram(Shaders.MESH_SELF_SHADERS)
-        Renderer.initializeShaderProgram(Shaders.MESH_DEPTH_SHADERS)
-        Renderer.initializeShaderProgram(Shaders.MESH_DIFFUSE_LIGHT_SHADERS)
-        Renderer.initializeShaderProgram(Shaders.MESH_SPECULAR_LIGHT_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.COMPILATION_SHADERS)
 
-        Renderer.initializeShaderProgram(Shaders.MESH_DIFFUSE_POINT_LIGHT_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.DIRECTIONAL_DIFFUSE_LIGHT_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.DIRECTIONAL_SPECULAR_LIGHT_SHADERS)
+
+        Renderer.initializeShaderProgram(Shaders.POINT_DIFFUSE_LIGHT_SHADERS)
+        Renderer.initializeShaderProgram(Shaders.POINT_SPECULAR_LIGHT_SHADERS)
     },
 
     initializeShaderProgram(shaders) {
@@ -72,6 +70,10 @@ const Renderer = {
 
     update(dt) {
         Surface.layers.forEach(Renderer.renderScene)
+    },
+
+    setClearColor(color) {
+        Renderer.gl.clearColor(color[0], color[1], color[2], color[3])
     },
 
     visualizeTexture(texture, type, doLinearization) {
@@ -130,7 +132,6 @@ const Renderer = {
         Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, null, 0)
 
         Renderer.gl.disable(Renderer.gl.BLEND)
-        Renderer.gl.disable(Renderer.gl.CULL_FACE)
 
         Renderer.gl.enable(Renderer.gl.DEPTH_TEST)
         Renderer.gl.depthFunc(Renderer.gl.LEQUAL)
@@ -144,7 +145,6 @@ const Renderer = {
         Renderer.gl.clearColor(1, 1, 1, 1)
 
         Renderer.gl.disable(Renderer.gl.BLEND)
-        Renderer.gl.disable(Renderer.gl.CULL_FACE)
 
         Renderer.gl.enable(Renderer.gl.DEPTH_TEST)
         Renderer.gl.depthFunc(Renderer.gl.LEQUAL)
@@ -165,7 +165,7 @@ const Renderer = {
 
         Renderer.gl.viewport(0, 0, Surface.space.clientWidth, Surface.space.clientHeight)
         Renderer.gl.clearColor(0, 0, 0, 0)
-        Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT | Renderer.gl.DEPTH_BUFFER_BIT)
+        Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT)
     },
 
     prepareClearLightImpactTexture(texture, color) {
@@ -198,8 +198,11 @@ const Renderer = {
         Renderer.prepareFramebufferForDepthTesting()
 
         // render common scene depth
-        Shaders.MESH_DEPTH_SHADERS.program.ensureUsage(options)
-        Renderer.renderToDepthTexture(Renderer.gl.TEXTURE_2D, Renderer.depthTexture, scene, Shaders.MESH_DEPTH_SHADERS.program)
+        Shaders.DEPTH_SHADERS.program.ensureUsage(options)
+        Renderer.gl.enable(Renderer.gl.CULL_FACE)
+        Renderer.renderToDepthTexture(Renderer.gl.TEXTURE_2D, Renderer.depthTexture, scene, Shaders.DEPTH_SHADERS.program)
+        Renderer.gl.disable(Renderer.gl.CULL_FACE)
+        // throw new Error('STOP')
 
         // Render light depth textures for meshes
         scene.container.directionalLightSources.forEach(light => Renderer.renderShadowMapForDirectionalLight(scene, light))
@@ -210,20 +213,15 @@ const Renderer = {
         scene.container.pointLightSources.forEach(light => Renderer.renderShadowMapForPointLight(scene, light))
 
 
-        // Renderer.visualizeTexture(scene.container.pointLightSources[0].shadowMap, 'depth_color_cube', true)
-        // Renderer.visualizeTexture(scene.environment.sun.shadowMap, 'depth', false)
-        // Renderer.visualizeTexture(Renderer.depthTexture, 'depth', true)
-        // throw new Error('STOP')
-        // return;
-
-
         // Render light textures and final color one
         Renderer.prepareFramebufferForColorRendering()
 
         // Render common temporary light textures for opaques
         // + render objects to final color texture
+        // console.log('RUN');
         scene.forEachOpaque((it, parentModelMatrix) =>
                 Renderer.renderObject(scene, it, parentModelMatrix, options))
+        // console.log('STEP');
         // for transparent
         scene.forEachTransparent((it, parentModelMatrix) =>
                 Renderer.renderObject(scene, it, parentModelMatrix, options))
@@ -239,9 +237,9 @@ const Renderer = {
     },
 
     renderShadowMapForDirectionalLight(scene, light) {
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uProjectionMatrix')
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(light.getInversedModel(), 'uViewMatrix')
-        Renderer.renderToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program)
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.longOrtho, 'uProjectionMatrix')
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(light.getInversedModel(), 'uViewMatrix')
+        Renderer.renderToDepthTexture(Renderer.gl.TEXTURE_2D, light.shadowMap, scene, Shaders.DEPTH_SHADERS.program)
     },
 
     renderToDepthTexture(slot, texture, scene, prog) {
@@ -257,21 +255,21 @@ const Renderer = {
     renderShadowMapForPointLight(scene, light) {
         Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.DEPTH_ATTACHMENT, Renderer.gl.TEXTURE_2D, light.shadowMapHelper.texture, 0)
 
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.cubeSidePerspective, 'uProjectionMatrix')
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(Renderer.cubeSidePerspective, 'uProjectionMatrix')
         const viewMatrix = light.getInversedModel()
 
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(viewMatrix, 'uViewMatrix')
-        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(-90, 0, 0).xM(viewMatrix), 'uViewMatrix')
-        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(180, 0, 0).xM(viewMatrix), 'uViewMatrix')
-        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(90, 0, 0).xM(viewMatrix), 'uViewMatrix')
-        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_X, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, -90, 0).xM(viewMatrix), 'uViewMatrix')
-        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
-        Shaders.MESH_DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, 90, 0).xM(viewMatrix), 'uViewMatrix')
-        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, light.shadowMap, scene, Shaders.MESH_DEPTH_SHADERS.program, light.holder)
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(viewMatrix, 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, light.shadowMap, scene, Shaders.DEPTH_SHADERS.program, light.holder)
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(-90, 0, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_X, light.shadowMap, scene, Shaders.DEPTH_SHADERS.program, light.holder)
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(180, 0, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, light.shadowMap, scene, Shaders.DEPTH_SHADERS.program, light.holder)
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(90, 0, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_X, light.shadowMap, scene, Shaders.DEPTH_SHADERS.program, light.holder)
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, -90, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, light.shadowMap, scene, Shaders.DEPTH_SHADERS.program, light.holder)
+        Shaders.DEPTH_SHADERS.program.setUniformMatrix4fv(mat4.rotate(0, 90, 0).xM(viewMatrix), 'uViewMatrix')
+        Renderer.renderToColorTexture(Renderer.gl.TEXTURE_CUBE_MAP_POSITIVE_Y, light.shadowMap, scene, Shaders.DEPTH_SHADERS.program, light.holder)
     },
 
     renderToColorTexture(slot, texture, scene, prog, excludeObject) {
@@ -288,40 +286,55 @@ const Renderer = {
     renderObject(scene, obj, parentModelMatrix, options) {
         Renderer.gl.blendFunc(Renderer.gl.ONE, Renderer.gl.ONE)
 
-        // diffuse
-        Renderer.prepareClearLightImpactTexture(Renderer.diffuseLightTexture, scene.environment.ambient)
-        const diffLightProg = obj.diffuseLightShaderProgram.program
-        diffLightProg.ensureUsage(options)
+        // for optimization
+        if (obj.light) {
+            Renderer.prepareClearLightImpactTexture(Renderer.diffuseLightTexture, obj.light.color)
+            Renderer.prepareClearLightImpactTexture(Renderer.specularLightTexture, [0, 0, 0, 0])
 
-        // render light impact
-        scene.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, parentModelMatrix, diffLightProg, options))
+        } else {
+            // diffuse
+            Renderer.prepareClearLightImpactTexture(Renderer.diffuseLightTexture, scene.environment.ambient)
+            const diffLightProg = Shaders.DIRECTIONAL_DIFFUSE_LIGHT_SHADERS.program
+            diffLightProg.ensureUsage(options)
+
+            // render light impact
+            scene.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, parentModelMatrix, diffLightProg, options))
 
 
-        const diffPointLightProg = obj.diffusePointLightShaderProgram.program
-        diffPointLightProg.ensureUsage(options)
-        // render light impact
-        scene.forEachPointLight(light => Renderer.renderImpactForPointLight(light, obj, parentModelMatrix, diffPointLightProg, options))
+            const diffPointLightProg = Shaders.POINT_DIFFUSE_LIGHT_SHADERS.program
+            diffPointLightProg.ensureUsage(options)
+            // render light impact
+            scene.forEachPointLight(light => Renderer.renderImpactForPointLight(light, obj, parentModelMatrix, diffPointLightProg, options))
 
 
-        // specular
-        Renderer.prepareClearLightImpactTexture(Renderer.specularLightTexture, [0, 0, 0, 0])
-        const specLightProg = obj.specularLightShaderProgram.program
-        specLightProg.ensureUsage(options)
+            // specular
+            Renderer.prepareClearLightImpactTexture(Renderer.specularLightTexture, [0, 0, 0, 0])
+            const specLightProg = Shaders.DIRECTIONAL_SPECULAR_LIGHT_SHADERS.program
+            specLightProg.ensureUsage(options)
 
-        // render light impact
-        scene.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, parentModelMatrix, specLightProg, options))
+            // render light impact
+            scene.forEachDirectionalLight(light => Renderer.renderImpactForDirectionalLight(light, obj, parentModelMatrix, specLightProg, options))
+
+
+            const specPointLightProg = Shaders.POINT_SPECULAR_LIGHT_SHADERS.program
+            specPointLightProg.ensureUsage(options)
+            // render light impact
+            scene.forEachPointLight(light => Renderer.renderImpactForPointLight(light, obj, parentModelMatrix, specPointLightProg, options))
+        }
 
 
         // summary
         Renderer.gl.blendFunc(Renderer.gl.SRC_ALPHA, Renderer.gl.ONE_MINUS_SRC_ALPHA)
         Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.colorTexture.texture, 0)
 
-        const selfProg = obj.selfShaderProgram.program
+        const selfProg = Shaders.COMPILATION_SHADERS.program
         selfProg.ensureUsage(options)
         selfProg.setRawTexture(Renderer.diffuseLightTexture.texture, Renderer.gl.TEXTURE2, 2, 'uLightDiffuseTexture')
         selfProg.setRawTexture(Renderer.specularLightTexture.texture, Renderer.gl.TEXTURE3, 3, 'uLightSpecularTexture')
 
         obj.draw(selfProg, parentModelMatrix, 'self')
+
+        // console.log(obj.tag);
     },
 
     renderImpactForDirectionalLight(light, obj, parentModelMatrix, prog, options) {

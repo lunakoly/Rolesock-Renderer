@@ -4,7 +4,7 @@ class Mesh {
         this.model = new ModelComponent()
         this.holder = null
 
-        this.material = material || Materials.DUMMY_MATERIAL
+        this.material = material || new MaterialComponent()
         this.texture = texture   || new TextureComponent()
         this.indicesCount = indicesCount
 
@@ -12,12 +12,6 @@ class Mesh {
         this.orderBuffer = orderBuffer
         this.vertexBuffer = vertexBuffer
         this.normalsBuffer = normalsBuffer
-
-        this.selfShaderProgram = Shaders.MESH_SELF_SHADERS
-        this.diffuseLightShaderProgram = Shaders.MESH_DIFFUSE_LIGHT_SHADERS
-        this.specularLightShaderProgram = Shaders.MESH_SPECULAR_LIGHT_SHADERS
-
-        this.diffusePointLightShaderProgram = Shaders.MESH_DIFFUSE_POINT_LIGHT_SHADERS
     }
 
     update(dt) {
@@ -36,8 +30,11 @@ class Mesh {
 
         if (mode == 'light') {
             prog.setAttribute(this.normalsBuffer, 3, 'aNormal')
-        } else {
-            // 'shape' or 'self'
+        } else if (mode == 'shape') {
+            prog.setAttribute(this.uvBuffer, 2, 'aTexture')
+            prog.useTexture(this.texture)
+            prog.setUniform1i(this.material.isFullOpaque, 'uIsFullyOpaque')
+        } else if (mode == 'self') {
             prog.setAttribute(this.uvBuffer, 2, 'aTexture')
             prog.useTexture(this.texture)
         }

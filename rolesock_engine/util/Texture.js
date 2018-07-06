@@ -12,6 +12,32 @@ class Texture {
         return this
     }
 
+    animateHorizontal(duration, framesCount) {
+        this.scale.x = 1 / framesCount
+        this.duration = duration
+        this.frameTime = duration / framesCount
+
+        this.update = dt => {
+            const index = Math.floor(new Date().getTime() % this.duration / this.frameTime)
+            this.offset.x = index / framesCount
+        }
+    }
+
+    animateVertical(duration, framesCount) {
+        this.scale.y = 1 / framesCount
+        this.duration = duration
+        this.frameTime = duration / framesCount
+
+        this.update = dt => {
+            const index = Math.floor(new Date().getTime() % this.duration / this.frameTime)
+            this.offset.y = index / framesCount
+        }
+    }
+
+    update(dt) {
+
+    }
+
     assumingItIs(type) {
         this.type = type
         Renderer.gl.bindTexture(type, this.texture)

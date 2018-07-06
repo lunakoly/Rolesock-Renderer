@@ -5,7 +5,10 @@ class MaterialComponent {
         this.diffuse  = [1, 1, 1, 1]
         this.specular = [0, 0, 0, 0]
         this.shininess = 10
-        this.isTransparent = false
+
+        // for optimization
+        this.isFullyTransparent = false
+        this.isFullyOpaque = true
 
         // TODO: mb later
         // https://en.wikipedia.org/wiki/Wavefront_.obj_file
@@ -13,7 +16,7 @@ class MaterialComponent {
     }
 
     update(dt) {
-        
+
     }
 
     clone() {

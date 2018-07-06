@@ -1,5 +1,3 @@
-const Objects = {}
-
 Objects.SPHERE = `
 # Blender v2.78 (sub 0) OBJ File: ''
 # www.blender.org

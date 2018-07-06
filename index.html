@@ -5,47 +5,54 @@
 </head>
 <body>
     <canvas id="quick_world_space" style="background: black;border: 1px solid red;" width="800" height="600"></canvas>
+    <div id="fps">FPS : 0</div>
 
+    <!-- Required by renderer -->
+    <script src="rolesock_engine/util/Matrix.js"></script>
+    <script src="rolesock_engine/util/Texture.js"></script>
+    <script src="rolesock_engine/util/ShaderProgram.js"></script>
+    <script src="rolesock_engine/util/shaders/Common.js"></script>
+    <script src="rolesock_engine/util/shaders/PointLight.js"></script>
+    <script src="rolesock_engine/util/shaders/Compilation.js"></script>
+    <script src="rolesock_engine/util/shaders/DirectionalLight.js"></script>
 
-    <script src="util/Matrix.js"></script>
-    <script src="util/ShaderProgram.js"></script>
-    <script src="util/Texture.js"></script>
+    <!-- Required by scene design -->
+    <script src="rolesock_engine/components/ModelComponent.js"></script>
+    <script src="rolesock_engine/components/TextureComponent.js"></script>
+    <script src="rolesock_engine/components/MaterialComponent.js"></script>
+    <script src="rolesock_engine/components/ContainerComponent.js"></script>
+    <script src="rolesock_engine/components/ControllerComponent.js"></script>
+    <script src="rolesock_engine/components/EnvironmentComponent.js"></script>
 
-    <script src="components/ModelComponent.js"></script>
-    <script src="components/ControllerComponent.js"></script>
-    <script src="components/ContainerComponent.js"></script>
-    <script src="components/MaterialComponent.js"></script>
-    <script src="components/TextureComponent.js"></script>
-    <script src="components/EnvironmentComponent.js"></script>
+    <!-- Required by scene design -->
+    <script src="rolesock_engine/observers/Observer.js"></script>
+    <script src="rolesock_engine/observers/PointLight.js"></script>
+    <script src="rolesock_engine/observers/OrthoCamera.js"></script>
+    <script src="rolesock_engine/observers/DirectionalLight.js"></script>
+    <script src="rolesock_engine/observers/PerspectiveCamera.js"></script>
+    <script src="rolesock_engine/observers/controls/FPSControls.js"></script>
+    <script src="rolesock_engine/observers/controls/MMOControls.js"></script>
 
-    <script src="scripts/Materials.js"></script>
-    <script src="scripts/Objects.js"></script>
+    <!-- Required by renderer -->
+    <script src="rolesock_engine/objects/Mesh.js"></script>
+    <script src="rolesock_engine/objects/Group.js"></script>
+    <script src="rolesock_engine/objects/Layer.js"></script>
 
-    <script src="scripts/ShadersCommon.js"></script>
-    <script src="scripts/ShadersMesh.js"></script>
-    <script src="scripts/ShadersMeshMore.js"></script>
+    <!-- Initialization -->
+    <script src="rolesock_engine/Engine.js"></script>
+    <script src="rolesock_engine/Surface.js"></script>
+    <script src="rolesock_engine/Renderer.js"></script>
 
-    <script src="theater/Mesh.js"></script>
-    <script src="theater/Group.js"></script>
-    <script src="theater/Scene.js"></script>
+    <!-- Easy Factory extension -->
+    <script src="rolesock_engine/easy/Create.js"></script>
+    <script src="rolesock_engine/easy/OBJLoader.js"></script>
+    <script src="rolesock_engine/easy/Materials.js"></script>
+    <script src="rolesock_engine/easy/MeshPrototype.js"></script>
 
-    <script src="easy/MeshPrototype.js"></script>
-    <script src="easy/Create.js"></script>
-    <script src="easy/OBJLoader.js"></script>
+    <!-- User custom shapes -->
+    <script src="shapes/Sphere.js"></script>
 
-    <script src="observers/Observer.js"></script>
-    <script src="observers/OrthoCamera.js"></script>
-    <script src="observers/PerspectiveCamera.js"></script>
-    <script src="observers/DirectionalLight.js"></script>
-    <script src="observers/PointLight.js"></script>
-
-    <script src="observers/controls/FPSControls.js"></script>
-    <script src="observers/controls/MMOControls.js"></script>
-
-    <script src="Engine.js"></script>
-    <script src="Surface.js"></script>
-    <script src="Renderer.js"></script>
-
+    <!-- User scripts -->
     <!-- <script src="start.js"></script> -->
     <script src="world.js"></script>
 </body>

@@ -1,5 +1,6 @@
 class Group {
     constructor() {
+        this.controller = new ControllerComponent()
         this.container = new ContainerComponent(this)
         this.model = new ModelComponent()
     }
@@ -7,6 +8,7 @@ class Group {
     update(dt) {
         this.model.update(dt)
         this.container.update(dt)
+        this.controller.update(dt)
     }
 
     forEachOpaque(callback, parentModelMatrix) {

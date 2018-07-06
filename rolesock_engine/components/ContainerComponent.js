@@ -16,7 +16,7 @@ class ContainerComponent {
 
         if (actor.container)
             this.containerChildren.push(actor)
-        else if (actor.material.isTransparent)
+        else if (actor.material.isFullyTransparent)
             this.transparentChildren.push(actor)
         else
             this.opaqueChildren.push(actor)
@@ -29,7 +29,7 @@ class ContainerComponent {
 
         if (actor.container)
             this.containerChildren.splice(this.containerChildren.indexOf(actor), 1)
-        else if (actor.material.isTransparent)
+        else if (actor.material.isFullyTransparent)
             this.transparentChildren.splice(this.transparentChildren.indexOf(actor), 1)
         else
             this.opaqueChildren.splice(this.opaqueChildren.indexOf(actor), 1)

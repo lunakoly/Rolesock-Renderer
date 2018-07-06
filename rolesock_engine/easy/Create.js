@@ -1,3 +1,6 @@
+const Objects = {}
+
+
 const Create = {
     initialize() {
         Create.prototypes = {}
@@ -80,6 +83,7 @@ const Create = {
         const plane = Create.new('Sprite')
         plane.material = material || Materials.DUMMY_MATERIAL
         plane.texture.diffuse = diffuseTexture || null
+        plane.material.isFullOpaque = false
 
         plane.model.update = dt => {
             plane.model.rotationMatrix = cam.getRotationMatrix()

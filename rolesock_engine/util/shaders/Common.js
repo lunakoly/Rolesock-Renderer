@@ -54,17 +54,6 @@ Shaders.TEXTURE_VISUALIZATION_SHADERS = {
                     grabber = vec3(-unwrap((tex.x - 0.75) / 0.25), unwrap(tex.y) * 3.0, -1.0);
                 }
 
-
-
-                // if (vTexture.x < 0.333) {
-                //     grabber = vec3(unwrap(vTexture.x / 0.333), unwrap(vTexture.y), 1.0);
-                // } else if (vTexture.x < 0.666) {
-                //     grabber = vec3(1.0, unwrap(vTexture.y), unwrap((vTexture.x - 0.333) / 0.333));
-                // } else {
-                //     grabber = vec3(unwrap((vTexture.x - 0.666) / 0.333), 1.0, unwrap(vTexture.y));
-                // }
-                //
-                // if (vTexture.y < 0.5) grabber = -grabber;
                 vec4 resolved = textureCube(uTargetCube, grabber);
 
 
@@ -111,10 +100,12 @@ Shaders.TEXTURE_VISUALIZATION_SHADERS = {
 }
 
 
-Shaders.MESH_DEPTH_SHADERS = {
+Shaders.DEPTH_SHADERS = {
     fragment: `
         #extension GL_EXT_frag_depth : enable
         precision lowp float;
+
+        uniform int uIsFullyOpaque;
 
         uniform struct {
             vec4 diffuse;
@@ -153,6 +144,12 @@ Shaders.MESH_DEPTH_SHADERS = {
 
 
         void main(void) {
+            gl_FragDepthEXT = gl_FragCoord.z + 0.0001;
+            gl_FragColor = oToV(gl_FragDepthEXT);
+
+            if (uIsFullyOpaque == 1) return;
+
+
             float alpha = uMaterial.diffuse.a;
 
             // blend with texture
@@ -172,9 +169,6 @@ Shaders.MESH_DEPTH_SHADERS = {
             if (alpha != 1.0) {
                 gl_FragDepthEXT = 1.0;
                 gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-            } else {
-                gl_FragDepthEXT = gl_FragCoord.z + 0.0001;
-                gl_FragColor = oToV(gl_FragDepthEXT);
             }
         }
     `,

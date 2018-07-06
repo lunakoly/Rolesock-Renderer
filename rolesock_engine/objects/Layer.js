@@ -1,8 +1,9 @@
-class Scene {
+class Layer {
     constructor(camera) {
         this.camera = camera
         this.container = new ContainerComponent(this)
         this.environment = new EnvironmentComponent()
+        this.controller = new ControllerComponent()
 
         this.container.addLightSource(this.environment.sun)
         this.initEvents()
@@ -24,6 +25,7 @@ class Scene {
         if (this.camera) this.camera.update(dt)
         this.container.update(dt)
         this.environment.update(dt)
+        this.controller.update(dt)
     }
 
     updateViewport() {
