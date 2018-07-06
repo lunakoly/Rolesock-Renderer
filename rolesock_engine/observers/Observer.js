@@ -1,3 +1,8 @@
+/**
+* Non-drawable layer entity that can have
+* holder - object used as an origin for
+* own transformations
+*/
 class Observer {
     constructor() {
         this.model = new ModelComponent()
@@ -8,6 +13,9 @@ class Observer {
         this.model.update(dt)
     }
 
+    /**
+    * Returns global total model matrix
+    */
     getModel() {
         let obj = this.holder
         let modelMatrix = this.model.total()
@@ -20,6 +28,9 @@ class Observer {
         return modelMatrix
     }
 
+    /**
+    * Returns inversed global total model matrix
+    */
     getInversedModel() {
         let obj = this.holder
         let modelMatrix = this.model.inversed()
@@ -32,6 +43,9 @@ class Observer {
         return modelMatrix
     }
 
+    /**
+    * Returns global rotation matrix
+    */
     getRotationMatrix() {
         let obj = this.holder
         let matrix = this.model.rotationMatrix

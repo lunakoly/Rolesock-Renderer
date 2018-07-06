@@ -1,3 +1,6 @@
+/**
+* Observer that represents global directional light
+*/
 class DirectionalLight extends Observer {
     constructor(color) {
         super()

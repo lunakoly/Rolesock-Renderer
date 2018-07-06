@@ -1,3 +1,6 @@
+/**
+* Observer that represents point light
+*/
 class PointLight extends Observer {
     constructor(color) {
         super()

@@ -1,3 +1,6 @@
+/**
+* FPS gesture manager with verical bounds
+*/
 class MMOControls {
     constructor(camera) {
         this.camera = camera

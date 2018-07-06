@@ -1,3 +1,6 @@
+/**
+* Manages containing layer entities
+*/
 class ContainerComponent {
     constructor(holder) {
         this.holder = holder
@@ -11,32 +14,45 @@ class ContainerComponent {
         this.pointLightSources = []
     }
 
-    addActor(actor) {
-        actor.holder = this.holder
+    /**
+    * Adds object to the corresponding inner collection.
+    * Also adds light source attached to it
+    * via 'light' field
+    */
+    addObject(obj) {
+        obj.holder = this.holder
 
-        if (actor.container)
-            this.containerChildren.push(actor)
-        else if (actor.material.isFullyTransparent)
-            this.transparentChildren.push(actor)
+        if (obj.container)
+            this.containerChildren.push(obj)
+        else if (obj.material.isFullyTransparent)
+            this.transparentChildren.push(obj)
         else
-            this.opaqueChildren.push(actor)
+            this.opaqueChildren.push(obj)
 
-        if (actor.light) this.addLightSource(actor.light)
+        if (obj.light) this.addLightSource(obj.light)
     }
 
-    removeActor(actor) {
-        actor.holder = null
+    /**
+    * Removes object from the corresponding inner collection.
+    * Also removes light source attached to it
+    * via 'light' field
+    */
+    removeObject(obj) {
+        obj.holder = null
 
-        if (actor.container)
-            this.containerChildren.splice(this.containerChildren.indexOf(actor), 1)
-        else if (actor.material.isFullyTransparent)
-            this.transparentChildren.splice(this.transparentChildren.indexOf(actor), 1)
+        if (obj.container)
+            this.containerChildren.splice(this.containerChildren.indexOf(obj), 1)
+        else if (obj.material.isFullyTransparent)
+            this.transparentChildren.splice(this.transparentChildren.indexOf(obj), 1)
         else
-            this.opaqueChildren.splice(this.opaqueChildren.indexOf(actor), 1)
+            this.opaqueChildren.splice(this.opaqueChildren.indexOf(obj), 1)
 
-        if (actor.light) this.removeLightSource(actor.light)
+        if (obj.light) this.removeLightSource(obj.light)
     }
 
+    /**
+    * Adds light source to the corresponding inner collection.
+    */
     addLightSource(lightSource) {
         if (lightSource.type == 'directional')
             this.directionalLightSources.push(lightSource)
@@ -44,6 +60,10 @@ class ContainerComponent {
             this.pointLightSources.push(lightSource)
     }
 
+    /**
+    * Removes light source from the corresponding
+    * inner collection.
+    */
     removeLightSource(lightSource) {
         if (lightSource.type == 'directional')
             this.directionalLightSources.splice(this.directionalLightSources.indexOf(lightSource), 1)

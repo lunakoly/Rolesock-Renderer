@@ -1,3 +1,6 @@
+/**
+* Convenient way of managing textures
+*/
 class Texture {
     constructor() {
         this.texture = Renderer.gl.createTexture()
@@ -6,12 +9,19 @@ class Texture {
         this.type = null
     }
 
+    /**
+    * Adds additional offset & scale parameters
+    */
     complicate() {
         this.offset = { x: 0, y: 0 }
         this.scale = { x: 1, y: 1 }
         return this
     }
 
+    /**
+    * Sets up texture to play horizontal frame
+    * animation
+    */
     animateHorizontal(duration, framesCount) {
         this.scale.x = 1 / framesCount
         this.duration = duration
@@ -23,6 +33,10 @@ class Texture {
         }
     }
 
+    /**
+    * Sets up texture to play vertical frame
+    * animation
+    */
     animateVertical(duration, framesCount) {
         this.scale.y = 1 / framesCount
         this.duration = duration
@@ -164,12 +178,19 @@ class Texture {
         return new Texture().assumingItIsCube().useNoFiltering().doClamp().scale(size, size).beDepthCube().unbind()
     }
 
+    /**
+    * Returns true if image width & height are of
+    * power of 2 size
+    */
     static isPowerOfTwo(image) {
         if (image.naturalWidth == 0 || image.naturalHeight == 0) return false
         const f = n => (n & (n - 1)) == 0   // is power of two
         return f(image.naturalWidth) && f(image.naturalHeight)
     }
 
+    /**
+    * Sets up texture from image source
+    */
     static fromImage(src, doMipmaping) {
         doMipmaping = doMipmaping != undefined ? doMipmaping : true
 

@@ -1,3 +1,6 @@
+/**
+* Represents maths matrix object
+*/
 class mat4 extends Array {
     /**
     * Creates new identity mat4

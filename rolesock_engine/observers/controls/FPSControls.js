@@ -1,3 +1,6 @@
+/**
+* Basic FPS gesture manager
+*/
 class FPSControls {
     constructor(camera) {
         this.camera = camera

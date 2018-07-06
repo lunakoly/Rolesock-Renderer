@@ -1,3 +1,6 @@
+/**
+* Object that encapsulates rendering
+*/
 const Renderer = {
     initialize() {
         try {
@@ -416,7 +419,6 @@ const Renderer = {
         Renderer.drawBuffersExt.drawBuffersWEBGL([Renderer.gl.NONE])
 
         // SCENE COMMON DEPTH TEXTURE
-        // Renderer.depthTexture = Texture.depth2D()
         Renderer.depthTexture = Texture.screenDepth()
         // SCENE RESULT COLOR TEXTURE
         Renderer.colorTexture = Texture.screenColor()

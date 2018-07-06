@@ -1,3 +1,7 @@
+/**
+* Represents shader program object
+* and encapsulates the corresponding functionality
+*/
 class ShaderProgram {
     constructor(pack) {
         this.pack = pack
@@ -19,6 +23,10 @@ class ShaderProgram {
         this.namespace = {}
     }
 
+    /**
+    * Returns WebGL shader object
+    * build from source code
+    */
     genShader(source, type) {
         const shader = Renderer.gl.createShader(type)
         Renderer.gl.shaderSource(shader, source)
@@ -34,15 +42,26 @@ class ShaderProgram {
         return shader
     }
 
+    /**
+    * Returns true if Renderer is currently
+    * using this particular program
+    */
     isUsed() {
         return Renderer.lastUsedProgram == this
     }
 
+    /**
+    * Makes Renderer use this particular program
+    */
     use() {
         Renderer.gl.useProgram(this.program)
         Renderer.lastUsedProgram = this
     }
 
+    /**
+    * If not used, uses itself and sets up common uniforms
+    * taken from the options
+    */
     ensureUsage(options) {
         if (!this.isUsed()) {
             this.use()
@@ -104,6 +123,9 @@ class ShaderProgram {
         Renderer.gl.bindTexture(Renderer.gl.TEXTURE_2D, tex)
     }
 
+    /**
+    * Sets texture and additional scale & offset uniforms
+    */
     setTexture(tex, unit, unitNumber, name) {
         this.setRawTexture(tex.texture, unit, unitNumber, name)
         this.setUniform1f(tex.scale.x, name + 'ScaleX')
@@ -112,6 +134,10 @@ class ShaderProgram {
         this.setUniform1f(tex.offset.y, name + 'OffsetY')
     }
 
+    /**
+    * Sets texture with it's additional uniforms (if it exists)
+    * and sets flag value to 1 if succeeded (otherwise 0)
+    */
     trySetTexture(tex, unit, unitNumber, flag, name) {
         if (tex) {
             this.setTexture(tex, unit, unitNumber, name)
@@ -122,6 +148,9 @@ class ShaderProgram {
         }
     }
 
+    /**
+    * Sets all uniforms responsible for object material
+    */
     useMaterial(mat) {
         this.setUniform1f(mat.opacity, 'uMaterial.opacity')
         this.setUniform1f(mat.shininess, 'uMaterial.shininess')
@@ -129,6 +158,9 @@ class ShaderProgram {
         this.setVec4(mat.specular, 'uMaterial.specular')
     }
 
+    /**
+    * Sets all uniforms responsible for object texture
+    */
     useTexture(textureComponent) {
         this.trySetTexture(textureComponent.diffuse, Renderer.gl.TEXTURE0, 0,
                 'uTexture.isDiffusePresented', 'uTexture.diffuse')

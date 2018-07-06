@@ -1,12 +1,18 @@
+/**
+* Object that manages canvas state
+*/
 const Surface = {
     initialize() {
-        this.space = document.getElementById('quick_world_space')
+        this.space = document.getElementById('rolesock_engine_space')
         this.aspect = this.space.clientWidth / this.space.clientHeight
         this.layers = []
 
         Surface.initEvents()
     },
 
+    /**
+    * Adds drawing layer
+    */
     addLayer(layer) {
         if (this.layers == undefined)
             console.error('Surface: Engine is not initialized!')
@@ -17,6 +23,10 @@ const Surface = {
         this.layers.forEach(it => it.update(dt))
     },
 
+    /**
+    * Resizes all of the required objects
+    * to satisfy the required resolution
+    */
     resize(width, height) {
         this.space.width = width
         this.space.height = height
@@ -52,6 +62,9 @@ const Surface = {
         })
     },
 
+    /**
+    * Adds on event callback
+    */
     on(event, callback) {
         if (this.customEvents[event])
             this.customEvents[event].push(callback)

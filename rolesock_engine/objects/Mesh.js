@@ -1,3 +1,8 @@
+/**
+* Drawable layer object that represents 3D shape
+* Override 'mesh.controller' to provide
+* custom functionality
+*/
 class Mesh {
     constructor(vertexBuffer, orderBuffer, indicesCount, uvBuffer, normalsBuffer, material, texture) {
         this.controller = new ControllerComponent()

@@ -1,3 +1,6 @@
+/**
+* Represents object material properties
+*/
 class MaterialComponent {
     constructor() {
         // basic
@@ -19,6 +22,9 @@ class MaterialComponent {
 
     }
 
+    /**
+    * Returns copy of this
+    */
     clone() {
         const mat = new MaterialComponent()
         mat.isTransparent = this.isTransparent

@@ -1,3 +1,6 @@
+/**
+* Provides global engine API
+*/
 const Engine = {
     initialize() {
         Surface.initialize()
@@ -38,6 +41,10 @@ const Engine = {
         Engine.globalUpdate(dt)
     },
 
+    /**
+    * Callback called on every inner state update
+    * Designed to be overriden by user
+    */
     globalUpdate(dt) {
 
     }

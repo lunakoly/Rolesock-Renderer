@@ -34,7 +34,7 @@ scene.controller.update = dt => {
 
 /////////// OBJECTS ///////////
 const ground = Create.new('Plane')
-scene.container.addActor(ground)
+scene.container.addObject(ground)
 ground.model.turn(0, -90, 0)
 ground.model.fit(10, 10, 1)
 ground.texture.diffuse = Texture.fromImage('img/ground.png')
@@ -43,11 +43,11 @@ ground.texture.diffuse.scale.y = 10
 
 
 const char = Create.Sprite(cam, Materials.CHARACTER, Texture.fromImage('img/char.png'))
-scene.container.addActor(char)
+scene.container.addObject(char)
 
 
 const sphere = Create.fromOBJSource('Sphere', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
-scene.container.addActor(sphere)
+scene.container.addObject(sphere)
 sphere.model.move(-1, 2, 2.5)
 
 
@@ -59,7 +59,7 @@ sphere.controller.update = dt => {
 
 const glassPane = Create.new('Plane')
 glassPane.material.isFullyTransparent = true
-scene.container.addActor(glassPane)
+scene.container.addObject(glassPane)
 glassPane.material = new MaterialComponent()
 glassPane.material.diffuse = [0.9, 1, 0.9, 1]
 glassPane.material.opacity = 0.5
@@ -83,7 +83,7 @@ torch.light.radius = 8
 
 // must be called after ther light has been added
 // otherwise scene.container.addLightSource(torch.light) would be required
-scene.container.addActor(torch)
+scene.container.addObject(torch)
 
 
 
@@ -98,7 +98,7 @@ function useFPS() {
 
 function testGroup() {
     const obj2 = Create.fromOBJSource('Sphere', Objects.SPHERE + 'usemtl PASTEL_BLOOD_MATERIAL')
-    scene.container.addActor(obj2)
+    scene.container.addObject(obj2)
     obj2.model.move(1, 1, 2)
 
     obj2.tag = 'fuck'
@@ -110,32 +110,32 @@ function testGroup() {
     obj4.model.move(0, 1, -3)
 
     const group1 = new Group()
-    group1.container.addActor(obj3)
-    group1.container.addActor(obj4)
-    scene.container.addActor(group1)
+    group1.container.addObject(obj3)
+    group1.container.addObject(obj4)
+    scene.container.addObject(group1)
     group1.model.scale(1, 0.5, 1)
 }
 
 function addWalls() {
     const wall1 = Create.new('Plane')
-    scene.container.addActor(wall1)
+    scene.container.addObject(wall1)
     wall1.model.rotate(90, 0, 0)
     wall1.model.scale(10, 5, 1)
     wall1.model.put(-10, 5, 0)
 
     const wall2 = Create.new('Plane')
-    scene.container.addActor(wall2)
+    scene.container.addObject(wall2)
     wall2.model.rotate(-90, 0, 0)
     wall2.model.scale(10, 5, 1)
     wall2.model.put(10, 5, 0)
 
     const wall3 = Create.new('Plane')
-    scene.container.addActor(wall3)
+    scene.container.addObject(wall3)
     wall3.model.scale(10, 5, 1)
     wall3.model.put(0, 5, 10)
 
     const wall4 = Create.new('Plane')
-    scene.container.addActor(wall4)
+    scene.container.addObject(wall4)
     wall4.model.rotate(180, 0, 0)
     wall4.model.scale(10, 5, 1)
     wall4.model.put(0, 5, -10)

@@ -1,3 +1,6 @@
+/**
+* Represents environment state of the scene layer
+*/
 class EnvironmentComponent {
     constructor() {
         this.ambient = [0.15, 0.15, 0.2, 0]
