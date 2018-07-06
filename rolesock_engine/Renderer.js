@@ -72,6 +72,21 @@ const Renderer = {
     },
 
     update(dt) {
+        // we use subFramebuffer for all the off-screen rendering
+        Renderer.gl.bindFramebuffer(Renderer.gl.FRAMEBUFFER, Renderer.subFramebuffer)
+
+        // clear sub textures
+        Renderer.drawBuffersExt.drawBuffersWEBGL([Renderer.gl.COLOR_ATTACHMENT0])
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.DEPTH_ATTACHMENT, Renderer.gl.TEXTURE_2D, null, 0)
+        Renderer.gl.viewport(0, 0, Surface.space.clientWidth, Surface.space.clientHeight)
+        Renderer.gl.clearColor(0, 0, 0, 0)
+
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.colorTexture.texture, 0)
+        Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT)
+        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.transparentHelperTexture.texture, 0)
+        Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT)
+
+        // render layers
         Surface.layers.forEach(Renderer.renderScene)
     },
 
@@ -178,13 +193,8 @@ const Renderer = {
         Renderer.gl.depthFunc(Renderer.gl.LEQUAL)
         Renderer.gl.depthMask(false)
 
+        Renderer.drawBuffersExt.drawBuffersWEBGL([Renderer.gl.COLOR_ATTACHMENT0])
         Renderer.gl.viewport(0, 0, Surface.space.clientWidth, Surface.space.clientHeight)
-        Renderer.gl.clearColor(0, 0, 0, 0)
-
-        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.colorTexture.texture, 0)
-        Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT)
-        Renderer.gl.framebufferTexture2D(Renderer.gl.FRAMEBUFFER, Renderer.gl.COLOR_ATTACHMENT0, Renderer.gl.TEXTURE_2D, Renderer.transparentHelperTexture.texture, 0)
-        Renderer.gl.clear(Renderer.gl.COLOR_BUFFER_BIT)
     },
 
     prepareClearLightImpactTexture(texture, color) {
@@ -221,7 +231,6 @@ const Renderer = {
         Renderer.gl.enable(Renderer.gl.CULL_FACE)
         Renderer.renderToDepthTexture(Renderer.gl.TEXTURE_2D, Renderer.depthTexture, scene, Shaders.DEPTH_SHADERS.program)
         Renderer.gl.disable(Renderer.gl.CULL_FACE)
-        // throw new Error('STOP')
 
         // Render light depth textures for meshes
         scene.container.directionalLightSources.forEach(light => Renderer.renderShadowMapForDirectionalLight(scene, light))
